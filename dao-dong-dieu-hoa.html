@@ -511,7 +511,7 @@ function evidence(i){
   const a=STEPS[i].act, s=state(t), A=P.A/100, W=0.5*P.k*A*A, Wd=0.5*P.m*s.v*s.v;
   const done=doneSteps.has(i)||checkStep(i);
   const head=done?'Căn cứ: ĐÃ ĐẠT — ':'Căn cứ: ';
-  if(a.kind==='observe') return head+'đã quan sát '+fmt(Math.min(actTrack.cycles,9),0)+' / 1 vòng trọn (pha tích lũy trong bước này: '+fmt(actTrack?actTrack.phAcc:0,1)+' rad)';
+  if(a.kind==='observe') return head+(actTrack.cycles>=1?'đã quan sát đủ 1 vòng trọn ✓':'tiến độ quan sát trong bước này: '+fmt(Math.min(99,100*(actTrack?actTrack.phAcc:0)/(2*Math.PI)),0)+' % của 1 vòng');
   if(a.kind==='reset0') return head+'φ hiện tại = '+fmt(P.phi*180/Math.PI,0)+'° · đã bấm “Đặt lại t = 0” khi φ = 0: '+(actTrack.reset0?'rồi':'chưa');
   if(a.kind==='slider'&&a.key==='A') return head+'các giá trị A đã kéo: '+(actTrack.Avals.size?[...actTrack.Avals].map(v=>fmt(v,0)+' cm').join(', '):'chưa kéo')+' · T luôn = '+fmt(period(),3)+' s';
   if(a.kind==='slider'&&a.key==='k') return head+'k lớn nhất đã kéo = '+(actTrack.kMax<0?'—':fmt(actTrack.kMax,0)+' N/m')+' (cần ≥ '+a.to+') · T = '+fmt(period(),3)+' s';
