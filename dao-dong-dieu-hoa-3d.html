@@ -484,14 +484,6 @@ let renderer3=null, scene3=null, camera3=null, blockMesh=null, springMesh=null,
     blockLabelTex=null, blockLabelCanvas=null, lastLabelM=null, lastRW=0, lastRH=0;
 const ORB={r:4.6, th:0.62, ph:1.03, tx:-0.35, ty:0.30, tz:0};
 const AXIS_Y=0.19, WALL_FACE=-1.47;
-function HelixCurve(len,R,coils){ THREE.Curve.call(this); this.len=len; this.R=R; this.coils=coils; }
-HelixCurve.prototype=Object.create(THREE.Curve.prototype);
-HelixCurve.prototype.constructor=HelixCurve;
-HelixCurve.prototype.getPoint=function(t,target){
-  target=target||new THREE.Vector3();
-  const a=t*this.coils*Math.PI*2;
-  return target.set(t*this.len, this.R*Math.cos(a), this.R*Math.sin(a));
-};
 function drawBlockLabel(){
   const g=blockLabelCanvas.getContext('2d');
   g.fillStyle='#f2a541'; g.fillRect(0,0,256,160);
@@ -602,8 +594,10 @@ function renderSceneInner(){
   const s=state(t);
   blockMesh.position.x=s.x;
   const len=(s.x-0.23)-WALL_FACE;
+  const pts=[], CN=11*20;
+  for(let i=0;i<=CN;i++){const f=i/CN, an=f*11*Math.PI*2; pts.push(new THREE.Vector3(f*len, 0.085*Math.cos(an), 0.085*Math.sin(an)));}
   const old=springMesh.geometry;
-  springMesh.geometry=new THREE.TubeGeometry(new HelixCurve(len,0.085,11),150,0.016,10,false);
+  springMesh.geometry=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),220,0.016,10,false);
   old.dispose();
   markAp.position.x=P.A/100; markAm.position.x=-P.A/100;
   const pos=xLine.geometry.attributes.position.array, y=0.74;
