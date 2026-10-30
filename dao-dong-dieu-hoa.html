@@ -38,7 +38,7 @@ button:disabled{opacity:.45;cursor:default}
 .chainnode{background:#f2f7fc;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.45}
 .chainnode b{color:var(--acc)}
 .chainsep{text-align:center;color:var(--mut);font-size:13px;line-height:1.2}
-#stepCard{left:12px;bottom:12px;width:452px;max-width:calc(100% - 24px)}
+#stepCard{left:12px;bottom:12px;width:404px;max-width:calc(100% - 24px);max-height:calc(100% - 24px);overflow-y:auto}
 #stepCard .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .tagchip{background:#e3eefb;color:var(--acc);font-weight:700;border-radius:999px;padding:3px 11px;font-size:13px}
 .status{font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 10px}
@@ -48,6 +48,7 @@ button:disabled{opacity:.45;cursor:default}
 #stepCard p{margin:5px 0;font-size:13.8px;line-height:1.5;color:#2c4761}
 #stepCard p b.k{color:var(--acc)}
 #evid{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#0e2237;color:#bfe3ff;border-radius:8px;padding:6px 9px;margin:7px 0;word-break:break-word}
+#conclLock{display:block;background:#f2f5f8;border:1px dashed #b9c9d8;border-radius:10px;padding:8px 11px;margin-top:8px;font-size:13px;color:var(--mut)}
 #conclBox{display:none;background:#eef7ee;border:1px solid #bfe3c8;border-radius:10px;padding:8px 11px;margin-top:8px}
 #conclBox.open{display:block}
 #conclBox p{font-size:13.5px}
@@ -138,6 +139,7 @@ table.src td,table.src th{border:1px solid var(--line);padding:8px 10px;text-ali
         <p><b class="k">Động thủ:</b> <span id="scAct"></span></p>
         <p><b class="k">Sẽ thấy:</b> <span id="scExpect"></span></p>
         <div id="evid"></div>
+        <div id="conclLock">🔒 <b>Kết luận đang khóa.</b> Thao tác đúng yêu cầu của bước này (dòng “Căn cứ” chuyển sang ĐÃ ĐẠT) thì kết luận mới hiện ra.</div>
         <div id="conclBox">
           <p style="margin-top:0"><b>Kết luận:</b> <span id="scConcl"></span></p>
           <ul id="scPoints"></ul>
@@ -146,7 +148,6 @@ table.src td,table.src th{border:1px solid var(--line);padding:8px 10px;text-ali
         </div>
         <div class="btnrow">
           <button id="btnDemo">▶ Tự động trình diễn</button>
-          <button id="btnReveal">Hiện kết luận</button>
           <button id="btnResetStep">↺ Đặt lại bước này</button>
         </div>
         <div class="btnrow">
@@ -424,24 +425,24 @@ function fit(c){
 function layout(){const a=fit(cv); if(a) dim=a; const b=fit(gv); if(b) gdim=b;}
 window.addEventListener('resize',layout);
 function draw(){
-  const {W,H}=dim, s=state(t), baseY=H*0.54, eqX=W*0.44;
-  const pxPerCm=(W*0.30)/18;
+  const {W,H}=dim, s=state(t), baseY=H*0.54, eqX=W*0.60;
+  const pxPerCm=(W*0.24)/18;
   const bx=eqX+(s.x*100)*pxPerCm;
   ctx.clearRect(0,0,W,H);
   const grd=ctx.createLinearGradient(0,baseY+44,0,H);
   grd.addColorStop(0,'#d9e5ee'); grd.addColorStop(1,'#eef3f7');
   ctx.fillStyle=grd; ctx.fillRect(0,baseY+44,W,H-baseY-44);
   ctx.fillStyle='#b9cbd9'; ctx.fillRect(0,baseY+42,W,3);
-  ctx.fillStyle='#5b7186'; ctx.fillRect(eqX-W*0.36,baseY-118,16,160);
+  ctx.fillStyle='#5b7186'; ctx.fillRect(eqX-W*0.30,baseY-118,16,160);
   ctx.strokeStyle='#43586a'; ctx.beginPath();
-  for(let y=baseY-112;y<baseY+38;y+=13){ctx.moveTo(eqX-W*0.36,y);ctx.lineTo(eqX-W*0.36-8,y+8);}
+  for(let y=baseY-112;y<baseY+38;y+=13){ctx.moveTo(eqX-W*0.30,y);ctx.lineTo(eqX-W*0.30-8,y+8);}
   ctx.stroke();
   ctx.strokeStyle='#9db4c6'; ctx.setLineDash([5,5]); ctx.beginPath();
   ctx.moveTo(eqX,baseY-118); ctx.lineTo(eqX,baseY+42); ctx.stroke(); ctx.setLineDash([]);
   ctx.fillStyle='#5b7186'; ctx.font='13px system-ui';
   ctx.fillText('O (VTCB)',eqX-24,baseY+62);
   ctx.fillText('−A',eqX-P.A*pxPerCm-8,baseY+62); ctx.fillText('+A',eqX+P.A*pxPerCm-6,baseY+62);
-  const x0=eqX-W*0.36+16, x1=bx-44, coils=11, amp=15, len=Math.max(30,x1-x0);
+  const x0=eqX-W*0.30+16, x1=bx-44, coils=11, amp=15, len=Math.max(30,x1-x0);
   ctx.strokeStyle='#0b76d1'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x0,baseY);
   for(let i=0;i<=coils*2;i++){
     const fx=x0+len*(i/(coils*2)), fy=baseY+((i%2===0)?0:((i%4===1)?-amp:amp))*((i===0||i===coils*2)?0:1);
@@ -539,7 +540,8 @@ function renderSteps(){
   const done=doneSteps.has(curStep)||checkStep(curStep);
   $('scStatus').textContent=done?'Đã làm ✓':'Chưa làm';
   $('scStatus').className='status '+(done?'yes':'no');
-  if(done) $('conclBox').classList.add('open');
+  $('conclBox').classList.toggle('open',done);
+  $('conclLock').style.display=done?'none':'block';
   $('btnNext').textContent=curStep<STEPS.length-1?'Bước tiếp ›':'Tới kiểm tra cuối bài ›';
   $('roadmap').innerHTML=STEPS.map((x,i)=>'<li><b>'+x.tag+'</b> — '+x.q+'</li>').join('');
 }
@@ -552,7 +554,6 @@ $('btnNext').onclick=()=>{
   if(curStep<STEPS.length-1) goStep(curStep+1);
   else openQuiz();
 };
-$('btnReveal').onclick=()=>$('conclBox').classList.toggle('open');
 $('btnResetStep').onclick=()=>{demo=null;applyStart(curStep);renderSteps();};
 /* auto-demo: animate the step's own action */
 function tween(key,from,to,dur,doneFn){
@@ -594,7 +595,7 @@ function loop(now){
   $('evid').textContent=evidence(curStep);
   const doneNow=doneSteps.has(curStep);
   const stEl=$('scStatus');
-  if(doneNow&&stEl.textContent.indexOf('Đã')!==0){stEl.textContent='Đã làm ✓';stEl.className='status yes';$('conclBox').classList.add('open');renderSteps();}
+  if(doneNow&&stEl.textContent.indexOf('Đã')!==0){renderSteps();}
   draw(); drawGraph(); refreshReads();
   requestAnimationFrame(loop);
 }
