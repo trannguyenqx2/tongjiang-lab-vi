@@ -4,206 +4,350 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
-<title>Dao động điều hòa — Con lắc lò xo · Bài học 3D tương tác (Vật lý 11)</title>
+<title>Dao động điều hòa — Con lắc lò xo · Vật lý 11</title>
 <style>
-:root{--ink:#16283f;--mut:#5b7186;--acc:#0b76d1;--acc2:#00a3c8;--bg:#eef3f7;--card:#fff;--line:#dbe5ee;--ok:#0d9d58;--warn:#b7791f}
+:root{--ink:#16283f;--mut:#5b7186;--acc:#0b76d1;--acc2:#00a3c8;--bg:#e9eff4;--card:#fff;--line:#d7e2ec;--ok:#0d9d58;--amber:#b7791f;--dark:#10263f}
 *{box-sizing:border-box}
-body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-header.top{background:#10263f;color:#eaf3fb;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:19px}
-header.top b{font-size:17px}
-header.top span{opacity:.75;font-size:13px}
-.wrap{max-width:1180px;margin:0 auto;padding:14px 16px 60px}
-.crumb{color:var(--mut);font-size:13px;margin:6px 0 10px}
-.chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:600;background:#e3eefb;color:var(--acc);margin-right:6px}
-.chip.green{background:#e2f5ea;color:var(--ok)}
-h1{display:inline;font-size:30px;margin:0 6px 0 0}
-.q{font-size:16.5px;color:#33506e;margin:10px 0 16px}
-.grid{display:grid;grid-template-columns:1fr 330px;gap:16px}
-@media(max-width:900px){.grid{grid-template-columns:1fr}}
-.stage{background:linear-gradient(180deg,#f8fbfd,#e8f0f6);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.stage canvas{display:block;width:100%}
-.stagebar{display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap}
-button{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;cursor:pointer}
-button.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;font-weight:600}
+html,body{margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+button{font:inherit;font-size:13.5px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;cursor:pointer}
 button:hover{filter:brightness(1.05)}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
-.panel h3{margin:2px 0 10px;font-size:16px}
-.ctl{margin:12px 0}
-.ctl label{display:flex;justify-content:space-between;font-size:13.5px;color:#33506e;margin-bottom:4px}
+button.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+/* ===== app shell (full screen, like the original lesson files) ===== */
+#app{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--dark);color:#eaf3fb;display:flex;align-items:center;gap:10px;padding:8px 14px;flex-wrap:wrap}
+.topbar a{color:#bcd8f2;text-decoration:none;font-size:13.5px}
+.topbar .ttl{font-weight:700;font-size:16.5px}
+.topbar .eqchip{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:999px;font-size:13.5px}
+.topbar .sp{flex:1}
+.stepbar{display:flex;gap:6px;align-items:center;background:#fff;border-bottom:1px solid var(--line);padding:7px 10px;overflow-x:auto;white-space:nowrap}
+.stepbar .lbl{font-size:12px;color:var(--mut);font-weight:700;margin-right:2px}
+.schip{border:1px solid var(--line);background:#f4f8fb;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
+.schip.cur{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700}
+.schip.done{border-color:#8fd3ab;color:#0a7a44;background:#edf9f1}
+.mainrow{flex:1;display:flex;min-height:0}
+.stagewrap{flex:1;position:relative;min-width:0;background:linear-gradient(180deg,#f8fbfd,#e6eef5)}
+.stagewrap canvas#stage{position:absolute;inset:0;width:100%;height:100%;display:block}
+.panelbox{position:absolute;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 24px rgba(16,38,63,.12);padding:12px 14px}
+#mainlineBox{top:12px;left:12px;width:348px;max-width:calc(100% - 24px)}
+#mainlineBox h4{margin:0 0 4px;font-size:12px;color:var(--acc);letter-spacing:.4px}
+#mainlineBox .q{font-size:14.5px;font-weight:600;line-height:1.45;margin:0}
+#chainList{display:none;margin-top:8px}
+#chainList.open{display:block}
+.chainnode{background:#f2f7fc;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px;line-height:1.45}
+.chainnode b{color:var(--acc)}
+.chainsep{text-align:center;color:var(--mut);font-size:13px;line-height:1.2}
+#stepCard{left:12px;bottom:12px;width:452px;max-width:calc(100% - 24px)}
+#stepCard .hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tagchip{background:#e3eefb;color:var(--acc);font-weight:700;border-radius:999px;padding:3px 11px;font-size:13px}
+.status{font-size:12.5px;font-weight:700;border-radius:999px;padding:3px 10px}
+.status.yes{background:#e2f5ea;color:var(--ok)}
+.status.no{background:#eef2f6;color:var(--mut)}
+#stepCard .sq{font-size:16px;font-weight:700;margin:8px 0 6px;line-height:1.4}
+#stepCard p{margin:5px 0;font-size:13.8px;line-height:1.5;color:#2c4761}
+#stepCard p b.k{color:var(--acc)}
+#evid{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#0e2237;color:#bfe3ff;border-radius:8px;padding:6px 9px;margin:7px 0;word-break:break-word}
+#conclBox{display:none;background:#eef7ee;border:1px solid #bfe3c8;border-radius:10px;padding:8px 11px;margin-top:8px}
+#conclBox.open{display:block}
+#conclBox p{font-size:13.5px}
+#conclBox ul{margin:4px 0 4px 16px;padding:0;font-size:13.5px;color:#2c4761;line-height:1.5}
+.eqline{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.eqline span{background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:12.8px}
+.btnrow{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;align-items:center}
+.btnrow .sp{flex:1}
+.console{width:324px;flex:none;background:#f6fafc;border-left:1px solid var(--line);overflow-y:auto;padding:10px}
+.unit{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:10px}
+.unit h3{margin:0 0 4px;font-size:14px;display:flex;gap:8px;align-items:center}
+.uno{width:22px;height:22px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+.unit .brief{font-size:12px;color:var(--mut);margin:0 0 6px}
+.ctl{margin:9px 0}
+.ctl label{display:flex;justify-content:space-between;font-size:13px;color:#33506e;margin-bottom:3px}
 .ctl label output{font-weight:700;color:var(--ink)}
 input[type=range]{width:100%;accent-color:var(--acc)}
-.reads{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.read{background:#f3f8fc;border:1px solid var(--line);border-radius:10px;padding:7px 10px}
-.read small{display:block;color:var(--mut);font-size:11.5px}
-.read b{font-size:16px}
-.energy{margin-top:12px}
-.bar{height:14px;border-radius:7px;background:#e7eef5;overflow:hidden;margin:4px 0 8px}
+.reads{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.read{background:#f3f8fc;border:1px solid var(--line);border-radius:9px;padding:5px 8px}
+.read small{display:block;color:var(--mut);font-size:11px}
+.read b{font-size:14.5px}
+.bar{height:12px;border-radius:6px;background:#e7eef5;overflow:hidden;margin:3px 0 7px}
 .bar i{display:block;height:100%}
-.bar .wd{background:#f2a541}.bar .wt{background:#3d8bfd}
-section.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:18px}
-section.card h2{margin:0 0 6px;font-size:20px}
-.steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:12px}
-.step{border:1px solid var(--line);border-radius:14px;padding:13px;background:#fbfdff}
-.step.done{border-color:#9fd8b4;background:#f4fbf6}
-.step h4{margin:0 0 6px;font-size:15.5px}
-.step p{margin:5px 0;font-size:13.8px;line-height:1.5;color:#2c4761}
-.step p b.k{color:var(--acc)}
-.concl{display:none;background:#eef7ee;border:1px solid #bfe3c8;border-radius:10px;padding:8px 10px}
-.step.show .concl{display:block}
-.step .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.small{font-size:12.5px;color:var(--mut)}
-.prog{height:10px;background:#e7eef5;border-radius:6px;overflow:hidden;margin-top:8px}
-.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:0%}
-.quiz q{display:block}
-.qitem{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:#fbfdff}
-.qitem p{margin:0 0 8px;font-weight:600;font-size:14.5px}
-.qitem label{display:block;font-size:14px;margin:5px 0;cursor:pointer}
-.expl{display:none;background:#fff8e6;border:1px solid #ecd9a0;border-radius:10px;padding:8px 10px;font-size:13.5px;margin-top:8px}
-.qitem.show .expl{display:block}
-.score{font-weight:700;font-size:16px;margin-top:10px}
+table.rec{width:100%;border-collapse:collapse;font-size:12.5px}
+table.rec td,table.rec th{border:1px solid var(--line);padding:4px 6px;text-align:right}
+table.rec td:first-child,table.rec th:first-child{text-align:left}
+.small{font-size:12.3px;color:var(--mut)}
+canvas#graph{width:100%;display:block;background:#0e2237;border-radius:10px}
+/* ===== below-the-app teacher zone ===== */
+.below{max-width:1180px;margin:0 auto;padding:22px 16px 60px}
+.below section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+.below h2{margin:0 0 8px;font-size:19px}
+.below p,.below li{font-size:14.5px;line-height:1.6;color:#2c4761}
 table.src{border-collapse:collapse;width:100%;font-size:14px}
 table.src td,table.src th{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
-footer{color:var(--mut);font-size:12.5px;margin-top:22px;line-height:1.6}
-.stepnav{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#10263f;color:#eaf3fb;flex-wrap:wrap}
-.stepnav b{font-size:14.5px}
-.step.cur{border-color:var(--acc);box-shadow:0 0 0 2px rgba(11,118,209,.25)}
-#stepDeck p{margin:6px 0;font-size:14.5px;line-height:1.55;color:#2c4761}
-#stepDeck p b.k{color:var(--acc)}
-canvas#graph{width:100%;display:block;background:#0e2237;border-radius:0 0 0 0}
+/* ===== quiz modal ===== */
+#quizModal{position:fixed;inset:0;background:rgba(10,25,40,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#quizModal.open{display:flex}
+.qbox{background:#fff;border-radius:18px;max-width:620px;width:100%;padding:22px;max-height:88dvh;overflow-y:auto}
+.qbox h2{margin:0 0 4px}
+.qbox .qtext{font-size:16px;font-weight:600;line-height:1.5;margin:12px 0}
+.qbox label{display:block;border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin:7px 0;cursor:pointer;font-size:14.5px}
+.qbox label:hover{background:#f4f8fb}
+.qbox label.right{border-color:#8fd3ab;background:#edf9f1}
+.qbox label.wrong{border-color:#e5a3a3;background:#fdf0f0}
+.qexpl{display:none;background:#fff8e6;border:1px solid #ecd9a0;border-radius:10px;padding:9px 12px;font-size:14px;margin-top:10px;line-height:1.55}
+.qexpl.open{display:block}
+@media(max-width:900px){
+  .console{display:none}
+  .console.open{display:block;position:absolute;right:0;top:0;bottom:0;z-index:20;box-shadow:-8px 0 30px rgba(16,38,63,.2)}
+  #btnConsole{display:inline-block !important}
+}
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="logo">V</div>
-  <div><b>VN Lab</b> <span>· Bài học khoa học tương tác cho học sinh Việt Nam</span></div>
-</header>
-<div class="wrap">
-  <div class="crumb">Trang chủ › Vật lý › Vật lý 11 (GDPT 2018) › Chương I · Dao động</div>
-  <div>
-    <span class="chip">Vật lý</span>
-    <h1>Dao động điều hòa — Con lắc lò xo</h1>
-    <span class="chip">Nguyên lý và thí nghiệm</span>
-    <span class="chip">8 bước</span>
-    <span class="chip green" id="doneChip">✓ Đã lưu tiến độ trên máy này</span>
-  </div>
-  <p class="q">Cùng một con lắc lò xo, vì sao kéo vật ra xa gấp đôi mà thời gian dao động một vòng vẫn không đổi — trong khi thay lò xo cứng hơn thì nó lại dao động nhanh hẳn lên?</p>
 
-  <div class="grid">
-    <div>
-      <div class="stage" id="stageBox">
-        <canvas id="stage" height="430"></canvas>
-        <canvas id="graph" height="150"></canvas>
-                <div class="stepnav">
-          <button id="btnPrevStep">‹ Bước trước</button>
-          <b id="stepNow"></b>
-          <button id="btnNextStep">Bước tiếp ›</button>
-          <span style="opacity:.75;font-size:12.5px">Đi từng bước ngay tại mô phỏng — chi tiết bước ở panel dưới sân khấu</span>
+<div id="app">
+  <div class="topbar">
+    <a href="https://trannguyenqx2.github.io/tongjiang-lab-vi/">← Mục lục</a>
+    <span class="ttl">Dao động điều hòa — Con lắc lò xo</span>
+    <span class="eqchip">x = A·cos(ωt + φ) · T = 2π√(m/k) · W = ½kA²</span>
+    <span class="sp"></span>
+    <button id="btnConsole" style="display:none">🎛 Bảng điều khiển</button>
+    <button id="btnQuizTop">Kiểm tra cuối bài</button>
+    <button id="btnFull">⛶ Toàn màn hình</button>
+  </div>
+
+  <div class="stepbar" id="stepBar"><span class="lbl">CÁC BƯỚC</span></div>
+
+  <div class="mainrow">
+    <div class="stagewrap" id="stageWrap">
+      <canvas id="stage"></canvas>
+
+      <div class="panelbox" id="mainlineBox">
+        <h4>CÂU HỎI CHÍNH</h4>
+        <p class="q">Cùng một con lắc lò xo, vì sao kéo vật ra xa gấp đôi mà thời gian dao động một vòng vẫn không đổi — trong khi thay lò xo cứng hơn thì nó lại dao động nhanh hẳn lên?</p>
+        <div style="margin-top:8px"><button id="btnChain">Chuỗi nhân quả ▾</button></div>
+        <div id="chainList"></div>
+      </div>
+
+      <div class="panelbox" id="stepCard">
+        <div class="hd">
+          <span class="tagchip" id="scTag"></span>
+          <span class="status no" id="scStatus">Chưa làm</span>
+          <span class="small" id="scCount"></span>
         </div>
-        <div class="stagebar">
+        <div class="sq" id="scQ"></div>
+        <p><b class="k">Động thủ:</b> <span id="scAct"></span></p>
+        <p><b class="k">Sẽ thấy:</b> <span id="scExpect"></span></p>
+        <div id="evid"></div>
+        <div id="conclBox">
+          <p style="margin-top:0"><b>Kết luận:</b> <span id="scConcl"></span></p>
+          <ul id="scPoints"></ul>
+          <p><b>Điểm thi:</b> <span id="scExam"></span></p>
+          <div class="eqline"><span id="scEq"></span><span id="scEqCal"></span></div>
+        </div>
+        <div class="btnrow">
+          <button id="btnDemo">▶ Tự động trình diễn</button>
+          <button id="btnReveal">Hiện kết luận</button>
+          <button id="btnResetStep">↺ Đặt lại bước này</button>
+        </div>
+        <div class="btnrow">
+          <button id="btnPrev">‹ Bước trước</button>
+          <span class="sp"></span>
+          <button class="primary" id="btnNext">Bước tiếp ›</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="console" id="consolePanel">
+      <div class="unit">
+        <h3><span class="uno" style="background:#0b76d1">1</span> Hệ dao động</h3>
+        <p class="brief">Lò xo + vật nặng · quyết định tần số riêng của hệ</p>
+        <div class="ctl"><label>Khối lượng vật m <output id="o_m"></output></label>
+          <input type="range" id="s_m" min="0.2" max="2" step="0.1" value="0.5"></div>
+        <div class="ctl"><label>Độ cứng lò xo k <output id="o_k"></output></label>
+          <input type="range" id="s_k" min="10" max="200" step="5" value="50"></div>
+      </div>
+
+      <div class="unit">
+        <h3><span class="uno" style="background:#7a4fd0">2</span> Điều kiện đầu</h3>
+        <p class="brief">Cách kích thích dao động tại t = 0</p>
+        <div class="ctl"><label>Biên độ A <output id="o_A"></output></label>
+          <input type="range" id="s_A" min="2" max="16" step="1" value="10"></div>
+        <div class="ctl"><label>Pha ban đầu φ <output id="o_phi"></output></label>
+          <input type="range" id="s_phi" min="-180" max="180" step="15" value="0"></div>
+        <div class="btnrow" style="margin-top:2px">
           <button class="primary" id="btnPlay">❚❚ Tạm dừng</button>
           <button id="btnReset">↺ Đặt lại t = 0</button>
           <button id="btnSlow">Tốc độ: 1×</button>
-          <button id="btnFull">⛶ Toàn màn hình</button>
-          <button id="btnDl">⬇ Tải file HTML này</button>
         </div>
       </div>
-      <section class="card" id="stepDeck" style="margin-top:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-          <h2 id="deckTitle" style="margin:0"></h2>
-        </div>
-        <div id="deckDots" style="margin:10px 0"></div>
-        <div id="deckBody"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          <button id="deckPreset">⚙ Áp dụng thông số của bước này</button>
-          <button id="deckShow">Hiện kết luận</button>
-          <button class="primary" id="deckDone">✓ Đã làm</button>
-        </div>
-      </section>
-      <section class="card">
-        <h2>Bài này học gì</h2>
-        <p style="line-height:1.6;font-size:14.5px;color:#2c4761">
-          Một vật nặng gắn vào lò xo nằm ngang, bỏ qua ma sát. Kéo vật lệch khỏi vị trí cân bằng rồi thả,
-          vật dao động quanh vị trí cân bằng với li độ <b>x = A·cos(ωt + φ)</b>. Kéo các thanh trượt ở bảng điều khiển
-          để tự tay kiểm chứng: chu kì <b>T = 2π·√(m/k)</b> chỉ phụ thuộc khối lượng và độ cứng lò xo,
-          vận tốc lớn nhất ở vị trí cân bằng, gia tốc luôn hướng về vị trí cân bằng, và cơ năng được bảo toàn
-          trong khi động năng – thế năng liên tục chuyển hóa cho nhau.
-        </p>
-      </section>
-    </div>
 
-    <aside class="panel">
-      <h3>🎛 Bảng điều khiển</h3>
-      <div class="ctl"><label>Khối lượng vật m <output id="o_m"></output></label>
-        <input type="range" id="s_m" min="0.2" max="2" step="0.1" value="0.5"></div>
-      <div class="ctl"><label>Độ cứng lò xo k <output id="o_k"></output></label>
-        <input type="range" id="s_k" min="10" max="200" step="5" value="50"></div>
-      <div class="ctl"><label>Biên độ A <output id="o_A"></output></label>
-        <input type="range" id="s_A" min="2" max="16" step="1" value="10"></div>
-      <div class="ctl"><label>Pha ban đầu φ <output id="o_phi"></output></label>
-        <input type="range" id="s_phi" min="-180" max="180" step="15" value="0"></div>
-      <div class="reads">
-        <div class="read"><small>Tần số góc ω</small><b id="r_w"></b></div>
-        <div class="read"><small>Chu kì T</small><b id="r_T"></b></div>
-        <div class="read"><small>Li độ x</small><b id="r_x"></b></div>
-        <div class="read"><small>Vận tốc v</small><b id="r_v"></b></div>
-        <div class="read"><small>Gia tốc a</small><b id="r_a"></b></div>
-        <div class="read"><small>Thời gian t</small><b id="r_t"></b></div>
+      <div class="unit">
+        <h3><span class="uno" style="background:#0d9d58">3</span> Màn hình đo</h3>
+        <p class="brief">Số liệu trực tiếp + đồ thị li độ theo thời gian</p>
+        <div class="reads">
+          <div class="read"><small>ω (rad/s)</small><b id="r_w"></b></div>
+          <div class="read"><small>T (s)</small><b id="r_T"></b></div>
+          <div class="read"><small>t (s)</small><b id="r_t"></b></div>
+          <div class="read"><small>x (cm)</small><b id="r_x"></b></div>
+          <div class="read"><small>v (cm/s)</small><b id="r_v"></b></div>
+          <div class="read"><small>a (m/s²)</small><b id="r_a"></b></div>
+        </div>
+        <div style="margin-top:8px"><canvas id="graph" height="92"></canvas></div>
       </div>
-      <div class="energy">
-        <h3 style="font-size:14.5px;margin:10px 0 2px">Năng lượng</h3>
+
+      <div class="unit">
+        <h3><span class="uno" style="background:#e07b24">4</span> Năng lượng &amp; ghi số liệu</h3>
+        <p class="brief">Động năng ⇄ thế năng, tổng cơ năng không đổi</p>
         <div class="small">Động năng W<sub>đ</sub> · <span id="e_wd"></span></div>
-        <div class="bar"><i class="wd" id="b_wd"></i></div>
+        <div class="bar"><i id="b_wd" style="background:#f2a541"></i></div>
         <div class="small">Thế năng W<sub>t</sub> · <span id="e_wt"></span></div>
-        <div class="bar"><i class="wt" id="b_wt"></i></div>
-        <div class="small">Cơ năng W = W<sub>đ</sub> + W<sub>t</sub> · <span id="e_w"></span> (không đổi)</div>
+        <div class="bar"><i id="b_wt" style="background:#3d8bfd"></i></div>
+        <div class="small">Cơ năng W · <span id="e_w"></span></div>
+        <div class="btnrow">
+          <button id="btnRecord">＋ Ghi một tổ số liệu</button>
+          <button id="btnClearRec">Xóa</button>
+        </div>
+        <table class="rec" style="margin-top:8px">
+          <thead><tr><th>m (kg)</th><th>k (N/m)</th><th>ω (rad/s)</th><th>T (s)</th></tr></thead>
+          <tbody id="recBody"><tr><td colspan="4" style="text-align:left" class="small">Chưa ghi tổ nào — đổi m, k rồi ghi lại để so sánh T.</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="unit">
+        <h3><span class="uno" style="background:#44586e">i</span> Về bài học</h3>
+        <p class="brief">Vật lý 11 · Chương I Dao động (GDPT 2018 — cả ba bộ SGK). Công thức theo SGK; khoảng giá trị thanh trượt là giá trị mô phỏng. Bài pilot tự biên soạn theo định dạng Tongjiang Lab, không thuộc repo gốc.</p>
+        <div class="btnrow"><button id="btnDl">⬇ Tải file HTML này</button></div>
       </div>
     </aside>
   </div>
+</div>
 
-  <section class="card">
-    <h2>Lộ trình 8 bước</h2>
-    <div class="small">Đi theo thứ tự: đọc “nói gì” → làm theo “động thủ” ngay trên mô phỏng → bấm “Hiện kết luận”. Tiến độ tự lưu trên máy này.</div>
-    <div class="prog"><i id="progBar"></i></div>
-    <div class="small" id="progTxt" style="margin-top:6px"></div>
-    <div class="steps" id="steps"></div>
+<div class="below">
+  <section>
+    <h2>Dành cho giáo viên — lộ trình toàn bài</h2>
+    <p>Bài học chạy trọn trong khung phía trên: đi theo thanh bước, mỗi bước có một hành động máy kiểm chứng được (hệ thống tự nhận biết học sinh đã làm hay chưa qua dòng “Căn cứ”), có nút tự động trình diễn cho học sinh chưa thao tác được, và kết luận kèm điểm thi. Tám bước:</p>
+    <ol id="roadmap"></ol>
   </section>
-
-  <section class="card">
-    <h2>Kiểm tra cuối bài</h2>
-    <div class="small">4 câu trắc nghiệm kiểu đề thi TN THPT. Chọn đáp án rồi bấm “Chấm điểm”.</div>
-    <div id="quiz"></div>
-    <button class="primary" id="btnScore">Chấm điểm</button>
-    <button id="btnRetry">Làm lại</button>
-    <div class="score" id="scoreOut"></div>
-  </section>
-
-  <section class="card">
+  <section>
     <h2>Nguồn số liệu và công thức</h2>
     <table class="src">
-      <tr><th style="width:210px">Theo SGK Vật lý 11 (GDPT 2018)</th>
-        <td>x = A·cos(ωt + φ) · ω = √(k/m) · T = 2π·√(m/k) · f = 1/T · v = −Aω·sin(ωt + φ) · a = −ω²x · W = ½kA² = ½mω²A². Chương Dao động có trong cả ba bộ sách Kết nối tri thức, Chân trời sáng tạo và Cánh diều.</td></tr>
+      <tr><th style="width:200px">Theo SGK Vật lý 11 (GDPT 2018)</th>
+        <td>x = A·cos(ωt + φ) · ω = √(k/m) · T = 2π·√(m/k) · v = −Aω·sin(ωt + φ) · a = −ω²x · W = ½kA². Chương Dao động có trong cả ba bộ sách Kết nối tri thức, Chân trời sáng tạo và Cánh diều.</td></tr>
       <tr><th>Giá trị của mô phỏng</th>
-        <td>Khoảng trượt m (0,2–2,0 kg), k (10–200 N/m), A (2–16 cm) là giá trị mô phỏng đặt ra để học sinh thử nghiệm, không phải số liệu SGK. Bỏ qua ma sát và khối lượng lò xo như giả thiết SGK.</td></tr>
-      <tr><th>Về bài mẫu này</th>
-        <td>Bài pilot tự biên soạn tại Việt Nam theo đúng định dạng của Tongjiang Lab (1 file HTML tự chứa, chạy offline, 1 câu hỏi dẫn, lộ trình từng bước, kiểm tra cuối bài) để thử nghiệm việc áp dụng mô hình này cho chương trình Việt Nam. Không thuộc repo gốc của tác giả Tongjiang.</td></tr>
+        <td>Khoảng trượt m (0,2–2,0 kg), k (10–200 N/m), A (2–16 cm) là giá trị mô phỏng đặt ra để thử nghiệm. Bỏ qua ma sát và khối lượng lò xo như giả thiết SGK.</td></tr>
     </table>
   </section>
+</div>
 
-  <footer>
-    VN Lab · Bài mẫu (pilot) — Dao động điều hòa · Vật lý 11 · Định dạng học theo Tongjiang Lab (CC BY-NC 4.0, ghi nguồn khi dùng phi thương mại).<br>
-    Mở file này bằng Chrome hoặc Edge là học được, không cần internet.
-  </footer>
+<div id="quizModal">
+  <div class="qbox">
+    <h2>Kiểm tra cuối bài</h2>
+    <div class="small" id="qProg"></div>
+    <div class="qtext" id="qText"></div>
+    <div id="qOpts"></div>
+    <div class="qexpl" id="qExpl"></div>
+    <div class="btnrow" style="margin-top:14px">
+      <button id="qClose">Đóng</button>
+      <span class="sp" style="flex:1"></span>
+      <button class="primary" id="qNext">Câu tiếp ›</button>
+    </div>
+    <div class="small" id="qScore" style="margin-top:10px;font-weight:700"></div>
+  </div>
 </div>
 
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-const P={m:0.5,k:50,A:10,phi:0}; // A in cm, phi in rad
-let t=0, running=true, speed=1, last=performance.now(), hist=[];
-const KEY='vnlab:dao-dong-dieu-hoa';
-let doneSteps=new Set(JSON.parse(localStorage.getItem(KEY+':steps')||'[]'));
+const fmt=(n,d)=>n.toFixed(d===undefined?2:d);
 
+/* ================= lesson data (schema mirrors the original lessons) ================= */
+const CHAIN=[
+ {k:'Lực kéo về',t:'F = −kx: luôn hướng về VTCB và tỉ lệ với li độ — vật càng xa O càng bị kéo mạnh về.'},
+ {k:'Gia tốc',t:'a = F/m = −ω²x: gia tốc ngược dấu li độ, nên vật luôn bị hãm lại ở biên và tăng tốc về O.'},
+ {k:'Chuyển động',t:'Kết quả là dao động điều hòa x = A·cos(ωt + φ); vận tốc sớm pha π/2 so với li độ.'},
+ {k:'Chu kì riêng',t:'T = 2π√(m/k) chỉ do hệ (m, k) quyết định — cách kích thích (A, φ) không làm T đổi.'},
+ {k:'Năng lượng',t:'Wđ và Wt đổi qua lại liên tục, tổng W = ½kA² giữ nguyên (bỏ qua ma sát).'}
+];
+const STEPS=[
+ {tag:'Nhận biết hệ',q:'Trên bàn có những gì? Vật chuyển động quanh điểm nào?',
+  act:{kind:'observe',text:'Cho mô phỏng chạy và quan sát trọn một vòng: vật đi từ biên này qua O sang biên kia rồi quay lại.'},
+  expect:'Vật qua O nhanh nhất, dừng đổi chiều ở hai biên ±A; một vòng mất T = 0,628 s (m = 0,5 kg, k = 50 N/m).',
+  concl:'Hệ gồm vật m gắn vào lò xo k trên mặt ngang nhẵn. Điểm O — vị trí lò xo không biến dạng — là vị trí cân bằng, và toàn bộ chuyển động được mô tả bằng x = A·cos(ωt + φ).',
+  eq:'x = A·cos(ωt + φ)',eqCal:'A = 10 cm · φ = 0 · ω = 10 rad/s',
+  points:['O là VTCB: hợp lực bằng 0, tốc độ lớn nhất.','Hai biên ±A: tốc độ bằng 0, gia tốc lớn nhất.','Bỏ qua ma sát và khối lượng lò xo như giả thiết SGK.'],
+  exam:'Câu hỏi “vị trí nào là VTCB” — chính là vị trí lò xo không biến dạng, không phải vị trí thả vật.',
+  start:{m:0.5,k:50,A:10,phi:0}},
+ {tag:'Thả từ biên',q:'Thả vật không vận tốc đầu từ biên dương, đồ thị bắt đầu từ đâu?',
+  act:{kind:'reset0',text:'Đặt φ = 0° rồi bấm nút “Đặt lại t = 0” một lần và nhìn điểm bắt đầu của đồ thị x(t).'},
+  expect:'x(0) = +10 cm, v(0) = 0; đồ thị khởi đầu ở đỉnh +A rồi đi xuống — đúng dạng cosin.',
+  concl:'Pha ban đầu φ ghi lại trạng thái tại t = 0. Thả không vận tốc đầu từ +A cho φ = 0; từ −A cho φ = π; qua VTCB theo chiều dương cho φ = −π/2.',
+  eq:'x(0) = A·cos φ',eqCal:'φ = 0 → x(0) = +A · v(0) = 0',
+  points:['φ quyết định bởi cả vị trí và chiều chuyển động tại t = 0.','Đổi φ không đổi A, T hay năng lượng.'],
+  exam:'Viết phương trình dao động: tìm A, ω rồi mới tìm φ từ điều kiện ban đầu — thứ tự này tránh nhầm φ.',
+  start:{phi:0,resetT:true}},
+ {tag:'Đổi biên độ',q:'Kéo vật ra xa gấp đôi, một vòng dao động có lâu hơn không?',
+  act:{kind:'slider',key:'A',text:'Kéo thanh biên độ A sang ít nhất hai giá trị khác nhau (ví dụ 6 cm rồi 14 cm), mỗi lần đọc chu kì T.'},
+  expect:'T giữ nguyên 0,628 s ở mọi A; chỉ tốc độ cực đại đổi: 60 cm/s khi A = 6 cm, 140 cm/s khi A = 14 cm.',
+  concl:'T = 2π√(m/k) không chứa A: đi quãng đường dài hơn nhưng nhanh hơn đúng tỉ lệ. Đây là tính đẳng thời của dao động điều hòa.',
+  eq:'T = 2π√(m/k)',eqCal:'v_max = Aω · ω = 10 rad/s',
+  points:['A do cách kích thích quyết định, không phải do hệ.','A tăng → v_max, a_max, W tăng theo, T không đổi.'],
+  exam:'Thấy câu “tăng biên độ, chu kì thế nào?” → không đổi. Bẫy kinh điển trong đề trắc nghiệm.',
+  start:{A:6}},
+ {tag:'Tăng độ cứng',q:'Lò xo cứng hơn gấp bốn, chu kì thay đổi thế nào?',
+  act:{kind:'slider',key:'k',op:'>=',to:180,text:'Kéo thanh độ cứng k lên 180 N/m trở lên rồi đọc ω và T.'},
+  expect:'Với k = 200 N/m: ω = 20,00 rad/s, T = 0,314 s — đúng một nửa so với k = 50 N/m.',
+  concl:'ω = √(k/m): k tăng 4 lần thì ω tăng 2 lần, T giảm 2 lần. Quan hệ căn bậc hai chứ không tỉ lệ thuận/nghịch đơn giản.',
+  eq:'ω = √(k/m)',eqCal:'k: 50 → 200 N/m · T: 0,628 → 0,314 s',
+  points:['Lò xo cứng → lực kéo về lớn → gia tốc lớn → dao động nhanh.','Lập tỉ số T₂/T₁ = √(k₁/k₂) để tính nhanh.'],
+  exam:'Dạng toán tỉ lệ chỉ cần tỉ số căn bậc hai, không cần tính T tuyệt đối.',
+  start:{m:0.5,k:50}},
+ {tag:'Tăng khối lượng',q:'Vật nặng hơn gấp bốn, chu kì thay đổi thế nào?',
+  act:{kind:'slider',key:'m',op:'>=',to:1.8,text:'Kéo thanh khối lượng m lên 1,8 kg trở lên rồi đọc T.'},
+  expect:'Với m = 2,0 kg: T = 1,257 s — gấp đôi so với m = 0,5 kg; đồ thị x(t) giãn ra theo chiều ngang.',
+  concl:'T ∝ √m: m tăng 4 lần thì T tăng 2 lần. Cùng bước trước: T chỉ do (m, k) quyết định — là tần số riêng của hệ.',
+  eq:'T = 2π√(m/k)',eqCal:'m: 0,5 → 2,0 kg · T: 0,628 → 1,257 s',
+  points:['m lớn → quán tính lớn → hệ đáp ứng chậm.','Tần số riêng không phụ thuộc cách kích thích.'],
+  exam:'Bài toán gắn thêm/tháo bớt vật: xét riêng thời điểm gắn (bảo toàn động lượng) và chu kì mới theo m mới.',
+  start:{k:50,m:0.5}},
+ {tag:'Cực trị v, a',q:'Ở đâu vận tốc lớn nhất, ở đâu gia tốc lớn nhất?',
+  act:{kind:'observeV',text:'Quan sát ba số x, v, a trên màn hình đo và chờ khoảnh khắc vật qua O với tốc độ lớn nhất.'},
+  expect:'Qua O: x = 0, a = 0, |v| = v_max = Aω = 100 cm/s. Ở biên: v = 0, |a| = a_max = Aω² = 10 m/s².',
+  concl:'v sớm pha π/2 so với x; a ngược pha với x (a = −ω²x). Bảng “ở biên / ở VTCB” xử lý được phần lớn câu lý thuyết về cực trị.',
+  eq:'a = −ω²x',eqCal:'v_max = Aω · a_max = Aω²',
+  points:['|v| lớn nhất ở VTCB, bằng 0 ở biên.','|a| lớn nhất ở biên, bằng 0 ở VTCB.','a luôn hướng về VTCB.'],
+  exam:'Đồ thị a(t) là đồ thị x(t) lật ngược và nhân ω² — nhìn đồ thị nhận ra ngay, khỏi tính.',
+  start:{m:0.5,k:50,A:10,phi:0}},
+ {tag:'Đổi pha đầu',q:'Đặt φ = 90°, vật xuất phát từ đâu và theo chiều nào?',
+  act:{kind:'slider',key:'phi',absTo:90,text:'Kéo thanh pha ban đầu φ đến 90° (hoặc −90°) — mô phỏng tự đặt lại t = 0 khi φ đổi.'},
+  expect:'Đồ thị bắt đầu từ x = 0 và đi xuống: x(0) = 0, v(0) = −100 cm/s (chiều âm); A và T không đổi.',
+  concl:'x = A·cos(ωt + π/2) = −A·sin(ωt). Đổi φ tương đương chọn lại gốc thời gian; bản chất dao động không đổi.',
+  eq:'x(0) = A·cos φ · v(0) = −Aω·sin φ',eqCal:'φ = 90° → x(0) = 0 · v(0) = −Aω',
+  points:['φ = 90°: xuất phát ở VTCB theo chiều âm.','φ = −90°: xuất phát ở VTCB theo chiều dương.'],
+  exam:'Cho đồ thị, đọc x(0) để suy cos φ, rồi dùng chiều chuyển động để chọn dấu của φ.',
+  start:{phi:0,resetT:true}},
+ {tag:'Đổi năng lượng',q:'Khi nào động năng và thế năng bằng nhau?',
+  act:{kind:'observeE',text:'Nhìn hai thanh năng lượng ở ô ④ và chờ khoảnh khắc chúng dài bằng nhau.'},
+  expect:'Hai thanh bằng nhau khi |x| = A/√2 ≈ 7,1 cm; khi đó Wđ = Wt = W/2, còn tổng W luôn 0,250 J (A = 10 cm, k = 50 N/m).',
+  concl:'Cơ năng bảo toàn, bên trong Wđ và Wt đổi cho nhau hai lần mỗi chu kì: Wt = W·(x/A)², Wđ = W·(1 − (x/A)²).',
+  eq:'W = ½kA² = Wđ + Wt',eqCal:'W = ½ · 50 · 0,1² = 0,250 J',
+  points:['Wt cực đại ở biên, Wđ cực đại ở VTCB.','|x| = A/√2 là vị trí Wđ = Wt.'],
+  exam:'Dạng “tại li độ nào Wđ = n·Wt?” → (x/A)² = 1/(n+1). Mẫu câu vận dụng rất hay ra.',
+  start:{m:0.5,k:50,A:10,phi:0}}
+];
+const QUIZ=[
+ {q:'Con lắc lò xo có k = 100 N/m, m = 0,25 kg. Chu kì dao động của vật là (lấy π² ≈ 10):',o:['0,20 s','0,314 s','0,50 s','1,00 s'],a:1,e:'ω = √(k/m) = √(100/0,25) = 20 rad/s → T = 2π/ω ≈ 0,314 s.'},
+ {q:'Giữ nguyên lò xo, tăng khối lượng vật lên 4 lần thì chu kì dao động:',o:['Tăng 4 lần','Tăng 2 lần','Không đổi','Giảm 2 lần'],a:1,e:'T = 2π√(m/k) ∝ √m. m tăng 4 lần → T tăng √4 = 2 lần.'},
+ {q:'Khi vật dao động điều hòa đi qua vị trí cân bằng, đại lượng nào sau đây đạt cực đại?',o:['Li độ','Gia tốc','Vận tốc','Thế năng'],a:2,e:'Tại VTCB x = 0 → a = −ω²x = 0, Wt = 0; toàn bộ cơ năng là động năng nên |v| = Aω lớn nhất.'},
+ {q:'Vật dao động với phương trình x = 4·cos(2πt) cm. Tại thời điểm t = 0,25 s, li độ của vật là:',o:['4 cm','2 cm','0 cm','−4 cm'],a:2,e:'Pha tại t = 0,25 s là 2π·0,25 = π/2 → x = 4·cos(π/2) = 0 cm.'}
+];
+
+/* ================= simulation core ================= */
+const P={m:0.5,k:50,A:10,phi:0};
+let t=0, running=true, speed=1, last=performance.now(), hist=[], phaseAcc=0;
+const KEY='vnlab:dao-dong-dieu-hoa-v3';
+let doneSteps=new Set(JSON.parse(localStorage.getItem(KEY+':steps')||'[]'));
+let curStep=Math.min(STEPS.length-1,Math.max(0,parseInt(localStorage.getItem(KEY+':cur')||'0',10)||0));
+let applyingStart=false, actTrack=null, demo=null, records=[];
 function omega(){return Math.sqrt(P.k/P.m)}
 function period(){return 2*Math.PI/omega()}
 function state(tt){
@@ -211,229 +355,294 @@ function state(tt){
   const x=A*Math.cos(ph), v=-A*w*Math.sin(ph), a=-w*w*x;
   return {w,x,v,a,ph};
 }
-function fmt(n,d){return n.toFixed(d===undefined?2:d)}
+function newTrack(){return {Avals:new Set(),kMax:-1,mMax:-1,phiHit:false,reset0:false,vmax:false,eeq:false,cycles:0,phAcc:0};}
+actTrack=newTrack();
 
-/* ---------- controls ---------- */
-function bindSlider(id,out,fmtFn,apply){
+/* slider wiring (user input feeds act tracking; programmatic start-state does not) */
+function bindSlider(id,out,fmtFn,apply,key){
   const el=$(id);
-  const upd=()=>{apply(parseFloat(el.value)); $(out).textContent=fmtFn(parseFloat(el.value)); refreshReads();};
-  el.addEventListener('input',upd); upd();
+  const upd=user=>{
+    const v=parseFloat(el.value); apply(v); $(out).textContent=fmtFn(v);
+    if(user&&!applyingStart&&actTrack){
+      if(key==='A') actTrack.Avals.add(v);
+      if(key==='k') actTrack.kMax=Math.max(actTrack.kMax,v);
+      if(key==='m') actTrack.mMax=Math.max(actTrack.mMax,v);
+      if(key==='phi'&&Math.abs(Math.abs(v)-90)<0.01) actTrack.phiHit=true;
+      if(key==='phi'){ t=0; hist=[]; }
+    }
+    refreshReads();
+  };
+  el.addEventListener('input',()=>upd(true)); upd(false);
+  return v=>{ el.value=v; upd(false); };
 }
-bindSlider('s_m','o_m',v=>fmt(v,1)+' kg',v=>P.m=v);
-bindSlider('s_k','o_k',v=>fmt(v,0)+' N/m',v=>P.k=v);
-bindSlider('s_A','o_A',v=>fmt(v,0)+' cm',v=>P.A=v);
-bindSlider('s_phi','o_phi',v=>fmt(v,0)+'°',v=>P.phi=v*Math.PI/180);
-
+const setM=bindSlider('s_m','o_m',v=>fmt(v,1)+' kg',v=>P.m=v,'m');
+const setK=bindSlider('s_k','o_k',v=>fmt(v,0)+' N/m',v=>P.k=v,'k');
+const setA=bindSlider('s_A','o_A',v=>fmt(v,0)+' cm',v=>P.A=v,'A');
+const setPhi=bindSlider('s_phi','o_phi',v=>fmt(v,0)+'°',v=>P.phi=v*Math.PI/180,'phi');
+function setParam(key,val){
+  if(key==='m') setM(val); else if(key==='k') setK(val);
+  else if(key==='A') setA(val); else if(key==='phi') setPhi(val);
+}
 $('btnPlay').onclick=()=>{running=!running;$('btnPlay').textContent=running?'❚❚ Tạm dừng':'▶ Chạy tiếp';};
-$('btnReset').onclick=()=>{t=0;hist=[];};
+$('btnReset').onclick=()=>{t=0;hist=[];if(actTrack&&Math.abs(P.phi)<1e-9) actTrack.reset0=true;};
 $('btnSlow').onclick=e=>{speed=speed===1?0.4:(speed===0.4?2:1);e.target.textContent='Tốc độ: '+(speed===0.4?'0,4×':speed+'×');};
-$('btnFull').onclick=()=>{const b=$('stageBox'); if(b.requestFullscreen) b.requestFullscreen();};
+$('btnFull').onclick=()=>{const b=$('app'); if(b.requestFullscreen) b.requestFullscreen();};
+$('btnConsole').onclick=()=>$('consolePanel').classList.toggle('open');
 $('btnDl').onclick=()=>{
   const blob=new Blob(['<!doctype html>\n'+document.documentElement.outerHTML],{type:'text/html'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='dao-dong-dieu-hoa.html'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 };
+$('btnChain').onclick=()=>{
+  const l=$('chainList'); l.classList.toggle('open');
+  $('btnChain').textContent=l.classList.contains('open')?'Chuỗi nhân quả ▴':'Chuỗi nhân quả ▾';
+};
+$('chainList').innerHTML=CHAIN.map((c,i)=>'<div class="chainnode"><b>'+c.k+':</b> '+c.t+'</div>'+(i<CHAIN.length-1?'<div class="chainsep">↓</div>':'')).join('');
 
-/* ---------- drawing ---------- */
+/* records */
+$('btnRecord').onclick=()=>{
+  if(records.length>=8){alert('Đã ghi tối đa 8 tổ — xóa bớt để ghi tiếp.');return;}
+  records.push({m:P.m,k:P.k,w:omega(),T:period()}); renderRecords();
+};
+$('btnClearRec').onclick=()=>{records=[];renderRecords();};
+function renderRecords(){
+  $('recBody').innerHTML=records.length?records.map(r=>'<tr><td>'+fmt(r.m,1)+'</td><td>'+fmt(r.k,0)+'</td><td>'+fmt(r.w,2)+'</td><td>'+fmt(r.T,3)+'</td></tr>').join('')
+   :'<tr><td colspan="4" style="text-align:left" class="small">Chưa ghi tổ nào — đổi m, k rồi ghi lại để so sánh T.</td></tr>';
+}
+
+/* ================= drawing ================= */
 const cv=$('stage'), ctx=cv.getContext('2d');
 const gv=$('graph'), gtx=gv.getContext('2d');
-function fitCanvas(c){
+let dim={W:800,H:500}, gdim={W:280,H:92};
+function fit(c){
   const r=c.getBoundingClientRect(), d=window.devicePixelRatio||1;
-  const h=parseInt(c.getAttribute('height'),10);
-  c.width=Math.max(300,r.width)*d; c.height=h*d; c.style.height=h+'px';
-  c.getContext('2d').setTransform(d,0,0,d,0,0);
-  return {W:r.width,H:h};
+  if(r.width<10) return null;
+  c.width=r.width*d; c.height=r.height*d;
+  const g=c.getContext('2d'); g.setTransform(d,0,0,d,0,0);
+  return {W:r.width,H:r.height};
 }
-let dim={W:800,H:430}, gdim={W:800,H:150};
-function layout(){dim=fitCanvas(cv); gdim=fitCanvas(gv);}
+function layout(){const a=fit(cv); if(a) dim=a; const b=fit(gv); if(b) gdim=b;}
 window.addEventListener('resize',layout);
-
 function draw(){
-  const {W,H}=dim, s=state(t), baseY=H*0.52, eqX=W*0.46;
-  const pxPerCm=(W*0.34)/18; // +-18cm visible
-  const bx=eqX + (s.x*100)*pxPerCm;
+  const {W,H}=dim, s=state(t), baseY=H*0.54, eqX=W*0.44;
+  const pxPerCm=(W*0.30)/18;
+  const bx=eqX+(s.x*100)*pxPerCm;
   ctx.clearRect(0,0,W,H);
-  // table
   const grd=ctx.createLinearGradient(0,baseY+44,0,H);
   grd.addColorStop(0,'#d9e5ee'); grd.addColorStop(1,'#eef3f7');
   ctx.fillStyle=grd; ctx.fillRect(0,baseY+44,W,H-baseY-44);
   ctx.fillStyle='#b9cbd9'; ctx.fillRect(0,baseY+42,W,3);
-  // wall
-  ctx.fillStyle='#5b7186'; ctx.fillRect(eqX-W*0.40,baseY-118,16,160);
+  ctx.fillStyle='#5b7186'; ctx.fillRect(eqX-W*0.36,baseY-118,16,160);
   ctx.strokeStyle='#43586a'; ctx.beginPath();
-  for(let y=baseY-112;y<baseY+38;y+=13){ctx.moveTo(eqX-W*0.40,y);ctx.lineTo(eqX-W*0.40-8,y+8);}
+  for(let y=baseY-112;y<baseY+38;y+=13){ctx.moveTo(eqX-W*0.36,y);ctx.lineTo(eqX-W*0.36-8,y+8);}
   ctx.stroke();
-  // equilibrium + axis
   ctx.strokeStyle='#9db4c6'; ctx.setLineDash([5,5]); ctx.beginPath();
   ctx.moveTo(eqX,baseY-118); ctx.lineTo(eqX,baseY+42); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle='#5b7186'; ctx.font='13px system-ui'; ctx.fillText('O (VTCB)',eqX-24,baseY+62);
-  ctx.strokeStyle='#7d99ae'; ctx.beginPath(); ctx.moveTo(eqX,baseY+78); ctx.lineTo(eqX+W*0.36,baseY+78);
-  ctx.lineTo(eqX+W*0.36-7,baseY+74); ctx.moveTo(eqX+W*0.36,baseY+78); ctx.lineTo(eqX+W*0.36-7,baseY+82); ctx.stroke();
-  ctx.fillText('+x',eqX+W*0.36-4,baseY+95);
+  ctx.fillStyle='#5b7186'; ctx.font='13px system-ui';
+  ctx.fillText('O (VTCB)',eqX-24,baseY+62);
   ctx.fillText('−A',eqX-P.A*pxPerCm-8,baseY+62); ctx.fillText('+A',eqX+P.A*pxPerCm-6,baseY+62);
-  // spring
-  const x0=eqX-W*0.40+16, x1=bx-44, coils=11, amp=15, len=Math.max(30,x1-x0);
+  const x0=eqX-W*0.36+16, x1=bx-44, coils=11, amp=15, len=Math.max(30,x1-x0);
   ctx.strokeStyle='#0b76d1'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x0,baseY);
   for(let i=0;i<=coils*2;i++){
     const fx=x0+len*(i/(coils*2)), fy=baseY+((i%2===0)?0:((i%4===1)?-amp:amp))*((i===0||i===coils*2)?0:1);
     ctx.lineTo(fx,fy);
   }
   ctx.lineTo(x1,baseY); ctx.stroke(); ctx.lineWidth=1;
-  // block (pseudo 3D)
   const bw=88,bh=64,by=baseY-bh/2;
   ctx.fillStyle='#7fb2dd'; ctx.beginPath(); ctx.moveTo(bx-bw/2,by); ctx.lineTo(bx-bw/2+12,by-12); ctx.lineTo(bx+bw/2+12,by-12); ctx.lineTo(bx+bw/2,by); ctx.closePath(); ctx.fill();
   ctx.fillStyle='#f2a541'; ctx.fillRect(bx-bw/2,by,bw,bh);
-  ctx.fillStyle='#d18a26'; ctx.fillRect(bx+bw/2,by,12,bh-0); ctx.beginPath(); ctx.moveTo(bx+bw/2,by); ctx.lineTo(bx+bw/2+12,by-12); ctx.lineTo(bx+bw/2+12,by+bh-12); ctx.lineTo(bx+bw/2,by+bh); ctx.closePath(); ctx.fill();
-  ctx.fillStyle='#5a3a08'; ctx.font='bold 17px system-ui'; ctx.textAlign='center';
+  ctx.fillStyle='#d18a26'; ctx.beginPath(); ctx.moveTo(bx+bw/2,by); ctx.lineTo(bx+bw/2+12,by-12); ctx.lineTo(bx+bw/2+12,by+bh-12); ctx.lineTo(bx+bw/2,by+bh); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#5a3a08'; ctx.font='bold 16px system-ui'; ctx.textAlign='center';
   ctx.fillText('m = '+fmt(P.m,1)+' kg',bx,by+bh/2+6); ctx.textAlign='left';
-  // displacement arrow
   ctx.strokeStyle='#c0392b'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(eqX,baseY-92); ctx.lineTo(bx,baseY-92); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(bx,baseY-92); ctx.lineTo(bx+(bx>=eqX?-8:8),baseY-96); ctx.moveTo(bx,baseY-92); ctx.lineTo(bx+(bx>=eqX?-8:8),baseY-88); ctx.stroke(); ctx.lineWidth=1;
-  ctx.fillStyle='#c0392b'; ctx.font='13px system-ui'; ctx.fillText('x = '+fmt(s.x*100,1)+' cm',(eqX+bx)/2-26,baseY-100);
-  // phase readout
-  ctx.fillStyle='#33506e'; ctx.font='14px system-ui';
-  ctx.fillText('pha (ωt + φ) = '+fmt(((s.ph%(2*Math.PI))+2*Math.PI)%(2*Math.PI),2)+' rad',14,26);
-  ctx.fillText('k = '+fmt(P.k,0)+' N/m · A = '+fmt(P.A,0)+' cm',14,48);
+  ctx.fillStyle='#c0392b'; ctx.font='13px system-ui';
+  ctx.fillText('x = '+fmt(s.x*100,1)+' cm',(eqX+bx)/2-26,baseY-100);
+  ctx.fillStyle='#33506e'; ctx.font='13.5px system-ui';
+  ctx.fillText('k = '+fmt(P.k,0)+' N/m · A = '+fmt(P.A,0)+' cm · φ = '+fmt(P.phi*180/Math.PI,0)+'°',W-300,26);
 }
 function drawGraph(){
   const {W,H}=gdim; gtx.clearRect(0,0,W,H);
   gtx.strokeStyle='rgba(255,255,255,.25)'; gtx.beginPath(); gtx.moveTo(0,H/2); gtx.lineTo(W,H/2); gtx.stroke();
-  gtx.fillStyle='rgba(255,255,255,.65)'; gtx.font='12px system-ui';
-  gtx.fillText('đồ thị x(t) — cm',10,16); gtx.fillText('+A',6,20+ (H/2- (P.A/18)*(H/2-8) )-2+18);
-  const win=6; // seconds window
-  gtx.strokeStyle='#ffb84d'; gtx.lineWidth=2; gtx.beginPath();
+  gtx.fillStyle='rgba(255,255,255,.65)'; gtx.font='11px system-ui'; gtx.fillText('x(t) — cm',8,14);
+  const win=6; gtx.strokeStyle='#ffb84d'; gtx.lineWidth=2; gtx.beginPath();
   let started=false;
   for(const [tt,xx] of hist){
     const px=W-((t-tt)/win)*W; if(px<0) continue;
-    const py=H/2-(xx/18)*(H/2-8);
+    const py=H/2-(xx/18)*(H/2-6);
     if(!started){gtx.moveTo(px,py);started=true;} else gtx.lineTo(px,py);
   }
   gtx.stroke(); gtx.lineWidth=1;
 }
 function refreshReads(){
   const s=state(t);
-  $('r_w').textContent=fmt(s.w,2)+' rad/s';
-  $('r_T').textContent=fmt(period(),3)+' s';
-  $('r_x').textContent=fmt(s.x*100,1)+' cm';
-  $('r_v').textContent=fmt(s.v*100,1)+' cm/s';
-  $('r_a').textContent=fmt(s.a,2)+' m/s²';
-  $('r_t').textContent=fmt(t,2)+' s';
+  $('r_w').textContent=fmt(s.w,2); $('r_T').textContent=fmt(period(),3); $('r_t').textContent=fmt(t,2);
+  $('r_x').textContent=fmt(s.x*100,1); $('r_v').textContent=fmt(s.v*100,0); $('r_a').textContent=fmt(s.a,2);
   const A=P.A/100, W=0.5*P.k*A*A, Wd=0.5*P.m*s.v*s.v, Wt=Math.max(0,W-Wd);
   $('e_wd').textContent=fmt(Wd,3)+' J'; $('e_wt').textContent=fmt(Wt,3)+' J'; $('e_w').textContent=fmt(W,3)+' J';
   $('b_wd').style.width=(W>0?100*Wd/W:0)+'%'; $('b_wt').style.width=(W>0?100*Wt/W:0)+'%';
 }
+
+/* ================= step engine ================= */
+function saveProg(){localStorage.setItem(KEY+':steps',JSON.stringify([...doneSteps]));localStorage.setItem(KEY+':cur',String(curStep));}
+function applyStart(i){
+  const st=STEPS[i].start||{}; applyingStart=true;
+  if(st.m!==undefined) setM(st.m);
+  if(st.k!==undefined) setK(st.k);
+  if(st.A!==undefined) setA(st.A);
+  if(st.phi!==undefined) setPhi(st.phi);
+  applyingStart=false;
+  if(st.resetT){t=0;hist=[];}
+  actTrack=newTrack();
+}
+function checkStep(i){
+  const a=STEPS[i].act, s=state(t), A=P.A/100, W=0.5*P.k*A*A;
+  if(a.kind==='observe') return actTrack.cycles>=1;
+  if(a.kind==='reset0') return actTrack.reset0;
+  if(a.kind==='slider'&&a.key==='A') return actTrack.Avals.size>=2;
+  if(a.kind==='slider'&&a.key==='k') return actTrack.kMax>=(a.to||0);
+  if(a.kind==='slider'&&a.key==='m') return actTrack.mMax>=(a.to||0);
+  if(a.kind==='slider'&&a.key==='phi') return actTrack.phiHit;
+  if(a.kind==='observeV') return actTrack.vmax;
+  if(a.kind==='observeE') return actTrack.eeq;
+  return false;
+}
+function evidence(i){
+  const a=STEPS[i].act, s=state(t), A=P.A/100, W=0.5*P.k*A*A, Wd=0.5*P.m*s.v*s.v;
+  const done=doneSteps.has(i)||checkStep(i);
+  const head=done?'Căn cứ: ĐÃ ĐẠT — ':'Căn cứ: ';
+  if(a.kind==='observe') return head+'đã quan sát '+fmt(Math.min(actTrack.cycles,9),0)+' / 1 vòng trọn (pha tích lũy trong bước này: '+fmt(actTrack?actTrack.phAcc:0,1)+' rad)';
+  if(a.kind==='reset0') return head+'φ hiện tại = '+fmt(P.phi*180/Math.PI,0)+'° · đã bấm “Đặt lại t = 0” khi φ = 0: '+(actTrack.reset0?'rồi':'chưa');
+  if(a.kind==='slider'&&a.key==='A') return head+'các giá trị A đã kéo: '+(actTrack.Avals.size?[...actTrack.Avals].map(v=>fmt(v,0)+' cm').join(', '):'chưa kéo')+' · T luôn = '+fmt(period(),3)+' s';
+  if(a.kind==='slider'&&a.key==='k') return head+'k lớn nhất đã kéo = '+(actTrack.kMax<0?'—':fmt(actTrack.kMax,0)+' N/m')+' (cần ≥ '+a.to+') · T = '+fmt(period(),3)+' s';
+  if(a.kind==='slider'&&a.key==='m') return head+'m lớn nhất đã kéo = '+(actTrack.mMax<0?'—':fmt(actTrack.mMax,1)+' kg')+' (cần ≥ '+a.to+') · T = '+fmt(period(),3)+' s';
+  if(a.kind==='slider'&&a.key==='phi') return head+'φ hiện tại = '+fmt(P.phi*180/Math.PI,0)+'° (cần 90° hoặc −90°)';
+  if(a.kind==='observeV') return head+'|v| lớn nhất vừa quan sát = '+fmt(Math.abs(s.v)*100,0)+' cm/s · v_max lý thuyết = '+fmt(A*s.w*100,0)+' cm/s · |x| lúc này = '+fmt(Math.abs(s.x)*100,1)+' cm';
+  if(a.kind==='observeE') return head+'Wđ = '+fmt(Wd,3)+' J · Wt = '+fmt(Math.max(0,W-Wd),3)+' J · |x| = '+fmt(Math.abs(s.x)*100,1)+' cm (bằng nhau khi |x| = '+fmt(P.A/Math.SQRT2,1)+' cm)';
+  return '';
+}
+function renderSteps(){
+  const bar=$('stepBar');
+  bar.innerHTML='<span class="lbl">CÁC BƯỚC</span>'+STEPS.map((s,i)=>'<button class="schip'+(i===curStep?' cur':'')+(doneSteps.has(i)?' done':'')+'" data-i="'+i+'">'+(i+1)+'. '+s.tag+(doneSteps.has(i)?' ✓':'')+'</button>').join('');
+  bar.querySelectorAll('.schip').forEach(b=>b.onclick=()=>goStep(parseInt(b.dataset.i,10)));
+  const s=STEPS[curStep];
+  $('scTag').textContent='Bước '+(curStep+1)+' · '+s.tag;
+  $('scCount').textContent='Bước '+(curStep+1)+' / '+STEPS.length;
+  $('scQ').textContent=s.q;
+  $('scAct').textContent=s.act.text;
+  $('scExpect').textContent=s.expect;
+  $('scConcl').textContent=s.concl;
+  $('scPoints').innerHTML=s.points.map(p=>'<li>'+p+'</li>').join('');
+  $('scExam').textContent=s.exam;
+  $('scEq').textContent='Công thức: '+s.eq;
+  $('scEqCal').textContent='Số liệu: '+s.eqCal;
+  const done=doneSteps.has(curStep)||checkStep(curStep);
+  $('scStatus').textContent=done?'Đã làm ✓':'Chưa làm';
+  $('scStatus').className='status '+(done?'yes':'no');
+  if(done) $('conclBox').classList.add('open');
+  $('btnNext').textContent=curStep<STEPS.length-1?'Bước tiếp ›':'Tới kiểm tra cuối bài ›';
+  $('roadmap').innerHTML=STEPS.map((x,i)=>'<li><b>'+x.tag+'</b> — '+x.q+'</li>').join('');
+}
+function goStep(i){
+  curStep=Math.min(STEPS.length-1,Math.max(0,i));
+  demo=null; applyStart(curStep); saveProg(); renderSteps();
+}
+$('btnPrev').onclick=()=>goStep(curStep-1);
+$('btnNext').onclick=()=>{
+  if(curStep<STEPS.length-1) goStep(curStep+1);
+  else openQuiz();
+};
+$('btnReveal').onclick=()=>$('conclBox').classList.toggle('open');
+$('btnResetStep').onclick=()=>{demo=null;applyStart(curStep);renderSteps();};
+/* auto-demo: animate the step's own action */
+function tween(key,from,to,dur,doneFn){
+  demo={key,from,to,t0:performance.now(),dur:dur*1000,doneFn};
+}
+$('btnDemo').onclick=()=>{
+  const i=curStep;
+  if(i===0){speed=0.4;$('btnSlow').textContent='Tốc độ: 0,4×';}
+  else if(i===1){setPhi(0);t=0;hist=[];}
+  else if(i===2){tween('A',P.A,14,3);}
+  else if(i===3){tween('k',P.k,200,3);}
+  else if(i===4){tween('m',P.m,2,3);}
+  else if(i===5){speed=0.4;$('btnSlow').textContent='Tốc độ: 0,4×';}
+  else if(i===6){tween('phi',P.phi*180/Math.PI,90,2.5);}
+  else if(i===7){speed=0.4;$('btnSlow').textContent='Tốc độ: 0,4×';}
+};
+/* ================= main loop ================= */
 function loop(now){
   const dt=Math.min(0.05,(now-last)/1000); last=now;
-  if(running){ t+=dt*speed; const s=state(t); hist.push([t,s.x*100]); while(hist.length&&t-hist[0][0]>6.2) hist.shift(); }
+  if(demo){
+    const f=Math.min(1,(now-demo.t0)/demo.dur), v=demo.from+(demo.to-demo.from)*f;
+    setParam(demo.key, demo.key==='phi'?v:v);
+    if(f>=1){const d=demo; demo=null; if(d.doneFn) d.doneFn();}
+  }
+  if(running){
+    const prevPh=state(t).ph; t+=dt*speed; const s=state(t);
+    if(actTrack){
+      actTrack.phAcc+=Math.abs(s.ph-prevPh);
+      actTrack.cycles=Math.floor(actTrack.phAcc/(2*Math.PI));
+      const A=P.A/100, W=0.5*P.k*A*A, Wd=0.5*P.m*s.v*s.v;
+      if(Math.abs(s.x)<=0.15*A&&Math.abs(s.v)>=0.95*A*s.w) actTrack.vmax=true;
+      if(W>0&&Math.abs(Wd-(W-Wd))<=0.06*W) actTrack.eeq=true;
+      if(!doneSteps.has(curStep)&&checkStep(curStep)){
+        doneSteps.add(curStep); saveProg(); renderSteps();
+      }
+    }
+    hist.push([t,s.x*100]); while(hist.length&&t-hist[0][0]>6.2) hist.shift();
+  }
+  $('evid').textContent=evidence(curStep);
+  const doneNow=doneSteps.has(curStep);
+  const stEl=$('scStatus');
+  if(doneNow&&stEl.textContent.indexOf('Đã')!==0){stEl.textContent='Đã làm ✓';stEl.className='status yes';$('conclBox').classList.add('open');renderSteps();}
   draw(); drawGraph(); refreshReads();
   requestAnimationFrame(loop);
 }
-layout(); requestAnimationFrame(loop);
-
-/* ---------- steps (step deck + overview, unified) ---------- */
-const STEPS=[
- {h:'1 · Nhận biết hệ dao động',say:'Hệ gồm vật nặng khối lượng m gắn vào lò xo độ cứng k, đặt nằm ngang, bỏ qua ma sát. Điểm O là vị trí cân bằng — vị trí lò xo không biến dạng.',do:'Để nguyên mặc định (m = 0,5 kg, k = 50 N/m, A = 10 cm), bấm “Chạy” và quan sát vật qua lại quanh O.',see:'Bạn sẽ thấy vật dao động đều đặn quanh O, li độ x đổi dấu liên tục, hai đầu mút là vị trí biên ±A.',con:'Mọi dao động điều hòa đều mô tả được bằng x = A·cos(ωt + φ): chỉ cần biết biên độ, tần số góc và pha ban đầu là biết trạng thái vật tại mọi thời điểm.',tip:'Đề thi hay hỏi “vị trí nào là VTCB” — đó là vị trí hợp lực bằng 0, cũng là vị trí tốc độ lớn nhất.',preset:{m:0.5,k:50,A:10,phi:0}},
- {h:'2 · Thả vật từ biên: pha ban đầu φ = 0',say:'Tại t = 0 ta thả vật không vận tốc đầu từ biên dương x = +A. Muốn x(0) = +A thì cos(φ) = 1, tức φ = 0.',do:'Đặt φ = 0°, bấm “Đặt lại t = 0” rồi cho chạy. Nhìn đồ thị x(t): nó khởi đầu ở đỉnh +A.',see:'Đồ thị bắt đầu từ +A và đi xuống — đúng dạng cosin. Vận tốc tại thời điểm thả bằng 0.',con:'Pha ban đầu φ ghi lại “ảnh chụp” trạng thái tại t = 0. Cùng một hệ, thả từ đâu và theo chiều nào sẽ cho φ khác nhau.',tip:'Mẹo viết phương trình: thả không vận tốc đầu từ +A → φ = 0; từ −A → φ = π; qua VTCB theo chiều dương → φ = −π/2.',preset:{phi:0}},
- {h:'3 · Chu kì không phụ thuộc biên độ',say:'Nghi vấn kinh điển: kéo xa hơn (A lớn hơn) thì vật đi quãng đường dài hơn — có lâu hơn không? Quãng đường dài hơn nhưng tốc độ cũng lớn hơn đúng tỉ lệ, hai hiệu ứng triệt tiêu nhau.',do:'Đọc số T trên bảng điều khiển với A = 6 cm, sau đó kéo A lên 14 cm và đọc lại T.',see:'T không đổi (chỉ xấp xỉ 0,628 s với m = 0,5 kg, k = 50 N/m) dù biên độ thay đổi; chỉ có tốc độ cực đại là tăng.',con:'T = 2π·√(m/k) — trong công thức không có A. Đây là tính chất “đẳng thời” của dao động điều hòa, cơ sở của đồng hồ con lắc/lò xo.',tip:'Thấy câu hỏi “tăng biên độ, chu kì thế nào?” → trả lời ngay: không đổi. Bẫy rất hay gặp.',preset:{A:6}},
- {h:'4 · Tăng độ cứng k: dao động nhanh lên',say:'Lò xo cứng hơn kéo vật về VTCB mạnh hơn → gia tốc lớn hơn → vật hoàn thành một vòng nhanh hơn.',do:'Giữ m = 0,5 kg. Tăng k từ 50 lên 200 N/m (gấp 4) và so sánh T trước/sau trên bảng số liệu.',see:'T giảm còn đúng một nửa (ω tăng gấp đôi). Vật qua lại nhanh và “giật” hơn hẳn.',con:'ω = √(k/m) nên k tăng 4 lần → ω tăng 2 lần → T giảm 2 lần. Quan hệ căn bậc hai, không phải tỉ lệ thuận/nghịch đơn giản.',tip:'Dạng toán tỉ lệ: chỉ cần lập tỉ số T₂/T₁ = √(k₁/k₂) — không cần tính số tuyệt đối.',preset:{m:0.5,k:200}},
- {h:'5 · Tăng khối lượng m: dao động chậm lại',say:'Vật nặng hơn thì quán tính lớn hơn, lò xo kéo về chậm hơn — giống đẩy một chiếc xe nặng.',do:'Giữ k = 50 N/m. Tăng m từ 0,5 kg lên 2,0 kg (gấp 4) và đọc T.',see:'T tăng đúng gấp đôi. Đồ thị x(t) “kéo giãn” theo chiều ngang.',con:'m tăng 4 lần → T tăng 2 lần (vì T ∝ √m). Ghép với bước 4: T chỉ do (m, k) quyết định — gọi là tần số riêng của hệ.',tip:'Bài toán “thêm bớt khối lượng khi lò xo đang dao động” rất hay ra: nhớ T phụ thuộc √m, và tại thời điểm gắn thêm vật phải xét bảo toàn động lượng/năng lượng riêng.',preset:{k:50,m:2}},
- {h:'6 · Vận tốc và gia tốc: ai cực đại ở đâu?',say:'v = −Aω·sin(ωt + φ) và a = −ω²x. Gia tốc luôn ngược dấu với li độ — luôn hướng về VTCB.',do:'Cho chạy và nhìn ba số x, v, a cùng lúc. Chú ý khoảnh khắc vật ở biên và khoảnh khắc vật qua O.',see:'Ở biên: v = 0, |a| lớn nhất. Qua VTCB: x = 0 nên a = 0, |v| lớn nhất (v_max = Aω).',con:'Ba đại lượng lệch pha nhau: v sớm pha hơn x một góc π/2; a ngược pha với x. Học thuộc bảng “ở biên / ở VTCB” xử lý được phần lớn câu lý thuyết.',tip:'Câu hỏi đồ thị: cho đồ thị x(t), đồ thị a(t) là hình sin lật ngược (nhân với −ω²) — nhận ra ngay không cần tính.',preset:{m:0.5,k:50,A:10,phi:0}},
- {h:'7 · Đổi pha ban đầu: đồ thị dịch ngang',say:'φ không đổi bản chất dao động (A, T giữ nguyên), chỉ đổi “điểm xuất phát” trên vòng tròn pha.',do:'Đặt φ = 90°, bấm “Đặt lại t = 0”. So sánh đồ thị với khi φ = 0°.',see:'Đồ thị bắt đầu từ x = 0 và đi xuống (dạng −sin). Vật xuất phát ngay tại VTCB nhưng theo chiều âm.',con:'x = A·cos(ωt + π/2) = −A·sin(ωt). Đổi φ tương đương chọn lại gốc thời gian — T, A, năng lượng đều không đổi.',tip:'Khi đề cho đồ thị, đọc x tại t = 0 để suy ra φ: x(0) = A·cos φ, kết hợp chiều chuyển động để chọn đúng nghiệm.',preset:{phi:90}},
- {h:'8 · Năng lượng: động năng ⇄ thế năng',say:'W = ½kA² không đổi theo thời gian (bỏ qua ma sát). Bên trong, Wđ và Wt liên tục đổi cho nhau hai lần trong mỗi chu kì.',do:'Nhìn hai thanh năng lượng ở bảng điều khiển khi vật chạy. Tìm khoảnh khắc hai thanh bằng nhau.',see:'Ở biên: Wt cực đại, Wđ = 0. Ở VTCB: ngược lại. Hai thanh bằng nhau khi |x| = A/√2.',con:'Tại vị trí |x| = A/√2: Wđ = Wt = W/2. Tổng quát: Wt = W·(x/A)², Wđ = W·(1 − (x/A)²).',tip:'Dạng toán “tại li độ nào Wđ = n·Wt?” → dùng (x/A)² = 1/(n+1). Đây là mẫu câu vận dụng xuất hiện liên tục trong đề thi.',preset:{m:0.5,k:50,A:10,phi:0}}
-];
-let curStep=Math.min(STEPS.length-1,Math.max(0,parseInt(localStorage.getItem(KEY+':cur')||'0',10)||0));
-let conclShown=new Set();
-function saveSteps(){localStorage.setItem(KEY+':steps',JSON.stringify([...doneSteps]));localStorage.setItem(KEY+':cur',String(curStep));}
-function setSlider(id,val){const el=$(id); if(!el||val===undefined) return; el.value=val; el.dispatchEvent(new Event('input',{bubbles:true}));}
-function applyPreset(i){
-  const p=STEPS[i].preset||{};
-  setSlider('s_m',p.m); setSlider('s_k',p.k); setSlider('s_A',p.A);
-  if(p.phi!==undefined) setSlider('s_phi',p.phi);
-  t=0; hist=[]; if(!running){running=true;$('btnPlay').textContent='❚❚ Tạm dừng';}
-}
-function goStep(i,scroll){
-  curStep=Math.min(STEPS.length-1,Math.max(0,i)); saveSteps(); renderSteps();
-  if(scroll) $('stepDeck').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-function toggleDone(i){
-  if(doneSteps.has(i)) doneSteps.delete(i); else doneSteps.add(i);
-  saveSteps(); renderSteps();
-}
-function renderSteps(){
-  const s=STEPS[curStep];
-  $('stepNow').textContent='Bước '+(curStep+1)+' / '+STEPS.length+' · '+s.h.replace(/^\d+ · /,'');
-  $('deckTitle').textContent=s.h;
-  $('deckBody').innerHTML=
-    '<p><b class="k">Nói gì:</b> '+s.say+'</p>'+
-    '<p><b class="k">Động thủ:</b> '+s.do+'</p>'+
-    '<p><b class="k">Sẽ thấy:</b> '+s.see+'</p>'+
-    (conclShown.has(curStep)?'<p class="concl" style="display:block"><b>Kết luận:</b> '+s.con+'<br><span class="small"><b>Điểm thi:</b> '+s.tip+'</span></p>':'');
-  $('deckPreset').style.display=s.preset?'':'none';
-  $('deckDone').textContent=doneSteps.has(curStep)?'✓ Đã làm bước này':'✓ Đã làm — '+(curStep<STEPS.length-1?'sang bước tiếp':'xem kiểm tra cuối bài');
-  $('deckDots').innerHTML=STEPS.map((_,i)=>'<button data-dot="'+i+'" class="'+(i===curStep?'primary':'')+'" style="padding:5px 10px;border-radius:999px;'+(doneSteps.has(i)?'border-color:#0d9d58;color:#0d9d58;':'')+'">'+(i+1)+(doneSteps.has(i)?' ✓':'')+'</button>').join(' ');
-  document.querySelectorAll('[data-dot]').forEach(b=>b.onclick=()=>goStep(parseInt(b.dataset.dot,10),false));
-  // overview cards
-  const box=$('steps'); box.innerHTML='';
-  STEPS.forEach((st,i)=>{
-    const d=document.createElement('div'); d.className='step'+(doneSteps.has(i)?' done':'')+(conclShown.has(i)?' show':'')+(i===curStep?' cur':'');
-    d.innerHTML='<h4>'+st.h+(i===curStep?' · <span style="color:var(--acc)">đang học</span>':'')+'</h4>'+
-     '<p><b class="k">Nói gì:</b> '+st.say+'</p>'+
-     '<p><b class="k">Động thủ:</b> '+st.do+'</p>'+
-     '<p><b class="k">Sẽ thấy:</b> '+st.see+'</p>'+
-     '<p class="concl"><b>Kết luận:</b> '+st.con+'<br><span class="small"><b>Điểm thi:</b> '+st.tip+'</span></p>'+
-     '<div class="row"><button data-a="go">▶ Học bước này</button><button data-a="show">Hiện kết luận</button><button data-a="done">'+(doneSteps.has(i)?'✓ Đã làm':'Đánh dấu đã làm')+'</button></div>';
-    d.querySelector('[data-a=go]').onclick=()=>goStep(i,true);
-    d.querySelector('[data-a=show]').onclick=()=>{conclShown.has(i)?conclShown.delete(i):conclShown.add(i); renderSteps();};
-    d.querySelector('[data-a=done]').onclick=()=>toggleDone(i);
-    box.appendChild(d);
+/* ================= quiz (one question at a time, like the original) ================= */
+let qi=0, qScore=0, qAnswered=false;
+function openQuiz(){$('quizModal').classList.add('open'); qi=0; qScore=0; qDone=false; showQ();}
+function closeQuiz(){$('quizModal').classList.remove('open');}
+function showQ(){
+  qAnswered=false;
+  const it=QUIZ[qi];
+  $('qProg').textContent='Câu '+(qi+1)+' / '+QUIZ.length+' · Điểm tạm: '+qScore;
+  $('qText').textContent=it.q;
+  $('qExpl').classList.remove('open'); $('qExpl').textContent='';
+  $('qScore').textContent='';
+  $('qNext').textContent=qi<QUIZ.length-1?'Câu tiếp ›':'Xem kết quả';
+  $('qOpts').innerHTML=it.o.map((o,oi)=>'<label data-oi="'+oi+'"><input type="radio" name="qq" style="margin-right:8px">'+String.fromCharCode(65+oi)+'. '+o+'</label>').join('');
+  $('qOpts').querySelectorAll('label').forEach(l=>{
+    l.onclick=()=>{
+      if(qAnswered) return; qAnswered=true;
+      const oi=parseInt(l.dataset.oi,10), right=oi===it.a;
+      if(right) qScore++;
+      l.classList.add(right?'right':'wrong');
+      $('qOpts').querySelectorAll('label')[it.a].classList.add('right');
+      $('qExpl').innerHTML='<b>'+(right?'Đúng. ':'Chưa đúng. ')+'</b>Giải thích: '+it.e;
+      $('qExpl').classList.add('open');
+      $('qProg').textContent='Câu '+(qi+1)+' / '+QUIZ.length+' · Điểm tạm: '+qScore;
+    };
   });
-  updProg();
 }
-function updProg(){
-  const n=doneSteps.size;
-  $('progBar').style.width=(100*n/STEPS.length)+'%';
-  $('progTxt').textContent='Đã hoàn thành '+n+' / '+STEPS.length+' bước';
-}
-$('btnPrevStep').onclick=()=>goStep(curStep-1,true);
-$('btnNextStep').onclick=()=>goStep(curStep+1,true);
-$('deckShow').onclick=()=>{conclShown.has(curStep)?conclShown.delete(curStep):conclShown.add(curStep); renderSteps();};
-$('deckPreset').onclick=()=>applyPreset(curStep);
-$('deckDone').onclick=()=>{
-  doneSteps.add(curStep); saveSteps();
-  if(curStep<STEPS.length-1){goStep(curStep+1,false);}
-  else{renderSteps(); document.querySelector('section.card h2:nth-of-type(1)'); $('quiz').scrollIntoView({behavior:'smooth',block:'start'});}
+let qDone=false;
+$('qNext').onclick=()=>{
+  if(qDone){ qDone=false; qi=0; qScore=0; showQ(); return; }
+  if(qi<QUIZ.length-1){ qi++; showQ(); return; }
+  qDone=true;
+  $('qText').textContent='Hoàn thành kiểm tra.';
+  $('qOpts').innerHTML=''; $('qExpl').classList.remove('open');
+  $('qProg').textContent='Kết quả cuối';
+  $('qScore').textContent='Bạn đạt '+qScore+' / '+QUIZ.length+' câu'+(qScore===QUIZ.length?' — nắm chắc bài này rồi!':' — quay lại các bước chưa đạt để ôn thêm nhé.');
+  $('qNext').textContent='Làm lại từ đầu';
 };
+$('qClose').onclick=closeQuiz;
+$('btnQuizTop').onclick=openQuiz;
+
+/* ================= init ================= */
+layout();
+applyStart(curStep);
 renderSteps();
-
-
-/* ---------- quiz ---------- */
-const QUIZ=[
- {q:'Con lắc lò xo có k = 100 N/m, m = 0,25 kg. Chu kì dao động của vật là (lấy π² ≈ 10):',o:['0,20 s','0,314 s','0,50 s','1,00 s'],a:1,e:'ω = √(k/m) = √(100/0,25) = 20 rad/s → T = 2π/ω ≈ 0,314 s.'},
- {q:'Giữ nguyên lò xo, tăng khối lượng vật lên 4 lần thì chu kì dao động:',o:['Tăng 4 lần','Tăng 2 lần','Không đổi','Giảm 2 lần'],a:1,e:'T = 2π√(m/k) ∝ √m. m tăng 4 lần → T tăng √4 = 2 lần.'},
- {q:'Khi vật dao động điều hòa đi qua vị trí cân bằng, đại lượng nào sau đây đạt cực đại?',o:['Li độ','Gia tốc','Vận tốc','Thế năng'],a:2,e:'Tại VTCB x = 0 → a = −ω²x = 0, Wt = 0; toàn bộ cơ năng là động năng nên |v| = Aω là lớn nhất.'},
- {q:'Vật dao động với phương trình x = 4·cos(2πt) cm. Tại thời điểm t = 0,25 s, li độ của vật là:',o:['4 cm','2 cm','0 cm','−4 cm'],a:2,e:'Pha tại t = 0,25 s là 2π·0,25 = π/2 → x = 4·cos(π/2) = 0 cm (vật đang ở VTCB).'}
-];
-const qbox=$('quiz');
-QUIZ.forEach((it,qi)=>{
-  const d=document.createElement('div'); d.className='qitem';
-  d.innerHTML='<p>Câu '+(qi+1)+'. '+it.q+'</p>'+it.o.map((o,oi)=>'<label><input type="radio" name="q'+qi+'" value="'+oi+'"> '+String.fromCharCode(65+oi)+'. '+o+'</label>').join('')+'<div class="expl"><b>Giải thích:</b> '+it.e+'</div>';
-  qbox.appendChild(d);
-});
-$('btnScore').onclick=()=>{
-  let sc=0;
-  QUIZ.forEach((it,qi)=>{
-    const sel=document.querySelector('input[name=q'+qi+']:checked');
-    const card=qbox.children[qi]; card.classList.add('show');
-    if(sel&&parseInt(sel.value,10)===it.a) sc++;
-  });
-  $('scoreOut').textContent='Kết quả: '+sc+' / '+QUIZ.length+' câu đúng'+(sc===QUIZ.length?' — nắm chắc bài này rồi!':' — xem lại phần giải thích ở các câu sai nhé.');
-  localStorage.setItem(KEY+':quiz',String(sc));
-};
-$('btnRetry').onclick=()=>{
-  document.querySelectorAll('#quiz input[type=radio]').forEach(r=>r.checked=false);
-  document.querySelectorAll('.qitem').forEach(c=>c.classList.remove('show'));
-  $('scoreOut').textContent='';
-};
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
