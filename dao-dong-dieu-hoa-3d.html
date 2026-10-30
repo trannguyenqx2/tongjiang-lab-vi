@@ -370,7 +370,7 @@ const QUIZ=[
 /* ================= simulation core ================= */
 const P={m:0.5,k:50,A:10,phi:0};
 let t=0, running=true, speed=1, last=performance.now(), hist=[], phaseAcc=0;
-const KEY='vnlab:dao-dong-dieu-hoa-v3';
+const KEY='vnlab:dao-dong-dieu-hoa-3d';
 let doneSteps=new Set(JSON.parse(localStorage.getItem(KEY+':steps')||'[]'));
 let curStep=Math.min(STEPS.length-1,Math.max(0,parseInt(localStorage.getItem(KEY+':cur')||'0',10)||0));
 let applyingStart=false, actTrack=null, demo=null, records=[];
@@ -517,7 +517,7 @@ function init3D(){
   scene3.add(new THREE.HemisphereLight(0xffffff,0x8fa8bf,0.75));
   const sun=new THREE.DirectionalLight(0xffffff,0.95);
   sun.position.set(2.6,4.4,2.8); sun.castShadow=true;
-  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.mapSize.set(1024,1024);
   sun.shadow.camera.left=-3.2; sun.shadow.camera.right=3.2; sun.shadow.camera.top=3.2; sun.shadow.camera.bottom=-3.2;
   sun.shadow.camera.far=14; sun.shadow.bias=-0.0004;
   scene3.add(sun);
@@ -582,15 +582,28 @@ function init3D(){
   el.addEventListener('pointerup',()=>{drag=null;});
   el.addEventListener('wheel',e=>{e.preventDefault(); ORB.r=Math.min(7.5,Math.max(2.6,ORB.r*(1+e.deltaY*0.001)));},{passive:false});
 }
+let renderErrShown=false;
 function renderScene(){
   if(!renderer3) return;
+  try{ renderSceneInner(); }
+  catch(err){
+    renderer3=null;
+    if(!renderErrShown){ renderErrShown=true;
+      const d=document.createElement('div');
+      d.style.cssText='position:absolute;inset:auto 12px 44px 12px;background:#fdf0f0;border:1px solid #e5a3a3;color:#7a1f1f;border-radius:10px;padding:10px 12px;font-size:13px;z-index:30';
+      d.textContent='Sân khấu 3D gặp lỗi khi vẽ: '+(err&&err.message?err.message:String(err))+' — phần bài học vẫn dùng được; hãy thử trình duyệt có WebGL.';
+      $('stageWrap').appendChild(d);
+    }
+  }
+}
+function renderSceneInner(){
   const wrap=$('stageWrap'), w=wrap.clientWidth, h=wrap.clientHeight;
-  if(w>10&&h>10&&(w!==lastRW||h!==lastRH)){renderer3.setSize(w,h,false); camera3.aspect=w/h; camera3.updateProjectionMatrix(); lastRW=w; lastRH=h;}
+  if(w>10&&h>10&&(w!==lastRW||h!==lastRH)){renderer3.setSize(w,h); camera3.aspect=w/h; camera3.updateProjectionMatrix(); lastRW=w; lastRH=h;}
   const s=state(t);
   blockMesh.position.x=s.x;
   const len=(s.x-0.23)-WALL_FACE;
   const old=springMesh.geometry;
-  springMesh.geometry=new THREE.TubeGeometry(new HelixCurve(len,0.085,11),170,0.016,10,false);
+  springMesh.geometry=new THREE.TubeGeometry(new HelixCurve(len,0.085,11),150,0.016,10,false);
   old.dispose();
   markAp.position.x=P.A/100; markAm.position.x=-P.A/100;
   const pos=xLine.geometry.attributes.position.array, y=0.74;
@@ -710,6 +723,7 @@ $('btnDemo').onclick=()=>{
 };
 /* ================= main loop ================= */
 function loop(now){
+  requestAnimationFrame(loop);
   const dt=Math.min(0.05,(now-last)/1000); last=now;
   if(demo){
     const f=Math.min(1,(now-demo.t0)/demo.dur), v=demo.from+(demo.to-demo.from)*f;
@@ -735,7 +749,6 @@ function loop(now){
   const stEl=$('scStatus');
   if(doneNow&&stEl.textContent.indexOf('Đã')!==0){renderSteps();}
   renderScene(); drawGraph(); refreshReads();
-  requestAnimationFrame(loop);
 }
 /* ================= quiz (one question at a time, like the original) ================= */
 let qi=0, qScore=0, qAnswered=false;
