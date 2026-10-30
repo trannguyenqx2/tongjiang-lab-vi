@@ -65,6 +65,11 @@ section.card h2{margin:0 0 6px;font-size:20px}
 table.src{border-collapse:collapse;width:100%;font-size:14px}
 table.src td,table.src th{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
 footer{color:var(--mut);font-size:12.5px;margin-top:22px;line-height:1.6}
+.stepnav{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#10263f;color:#eaf3fb;flex-wrap:wrap}
+.stepnav b{font-size:14.5px}
+.step.cur{border-color:var(--acc);box-shadow:0 0 0 2px rgba(11,118,209,.25)}
+#stepDeck p{margin:6px 0;font-size:14.5px;line-height:1.55;color:#2c4761}
+#stepDeck p b.k{color:var(--acc)}
 canvas#graph{width:100%;display:block;background:#0e2237;border-radius:0 0 0 0}
 </style>
 </head>
@@ -89,6 +94,12 @@ canvas#graph{width:100%;display:block;background:#0e2237;border-radius:0 0 0 0}
       <div class="stage" id="stageBox">
         <canvas id="stage" height="430"></canvas>
         <canvas id="graph" height="150"></canvas>
+                <div class="stepnav">
+          <button id="btnPrevStep">‹ Bước trước</button>
+          <b id="stepNow"></b>
+          <button id="btnNextStep">Bước tiếp ›</button>
+          <span style="opacity:.75;font-size:12.5px">Đi từng bước ngay tại mô phỏng — chi tiết bước ở panel dưới sân khấu</span>
+        </div>
         <div class="stagebar">
           <button class="primary" id="btnPlay">❚❚ Tạm dừng</button>
           <button id="btnReset">↺ Đặt lại t = 0</button>
@@ -97,6 +108,18 @@ canvas#graph{width:100%;display:block;background:#0e2237;border-radius:0 0 0 0}
           <button id="btnDl">⬇ Tải file HTML này</button>
         </div>
       </div>
+      <section class="card" id="stepDeck" style="margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h2 id="deckTitle" style="margin:0"></h2>
+        </div>
+        <div id="deckDots" style="margin:10px 0"></div>
+        <div id="deckBody"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button id="deckPreset">⚙ Áp dụng thông số của bước này</button>
+          <button id="deckShow">Hiện kết luận</button>
+          <button class="primary" id="deckDone">✓ Đã làm</button>
+        </div>
+      </section>
       <section class="card">
         <h2>Bài này học gì</h2>
         <p style="line-height:1.6;font-size:14.5px;color:#2c4761">
@@ -307,40 +330,81 @@ function loop(now){
 }
 layout(); requestAnimationFrame(loop);
 
-/* ---------- steps ---------- */
+/* ---------- steps (step deck + overview, unified) ---------- */
 const STEPS=[
- {h:'1 · Nhận biết hệ dao động',say:'Hệ gồm vật nặng khối lượng m gắn vào lò xo độ cứng k, đặt nằm ngang, bỏ qua ma sát. Điểm O là vị trí cân bằng — vị trí lò xo không biến dạng.',do:'Để nguyên mặc định (m = 0,5 kg, k = 50 N/m, A = 10 cm), bấm “Chạy” và quan sát vật qua lại quanh O.',see:'Bạn sẽ thấy vật dao động đều đặn quanh O, li độ x đổi dấu liên tục, hai đầu mút là vị trí biên ±A.',con:'Mọi dao động điều hòa đều mô tả được bằng x = A·cos(ωt + φ): chỉ cần biết biên độ, tần số góc và pha ban đầu là biết trạng thái vật tại mọi thời điểm.',tip:'Đề thi hay hỏi “vị trí nào là VTCB” — đó là vị trí hợp lực bằng 0, cũng là vị trí tốc độ lớn nhất.'},
- {h:'2 · Thả vật từ biên: pha ban đầu φ = 0',say:'Tại t = 0 ta thả vật không vận tốc đầu từ biên dương x = +A. Muốn x(0) = +A thì cos(φ) = 1, tức φ = 0.',do:'Đặt φ = 0°, bấm “Đặt lại t = 0” rồi cho chạy. Nhìn đồ thị x(t): nó khởi đầu ở đỉnh +A.',see:'Đồ thị bắt đầu từ +A và đi xuống — đúng dạng cosin. Vận tốc tại thời điểm thả bằng 0.',con:'Pha ban đầu φ ghi lại “ảnh chụp” trạng thái tại t = 0. Cùng một hệ, thả từ đâu và theo chiều nào sẽ cho φ khác nhau.',tip:'Mẹo viết phương trình: thả không vận tốc đầu từ +A → φ = 0; từ −A → φ = π; qua VTCB theo chiều dương → φ = −π/2.'},
- {h:'3 · Chu kì không phụ thuộc biên độ',say:'Nghi vấn kinh điển: kéo xa hơn (A lớn hơn) thì vật đi quãng đường dài hơn — có lâu hơn không? Quãng đường dài hơn nhưng tốc độ cũng lớn hơn đúng tỉ lệ, hai hiệu ứng triệt tiêu nhau.',do:'Đọc số T trên bảng điều khiển với A = 6 cm, sau đó kéo A lên 14 cm và đọc lại T.',see:'T không đổi (chỉ xấp xỉ 0,628 s với m = 0,5 kg, k = 50 N/m) dù biên độ thay đổi; chỉ có tốc độ cực đại là tăng.',con:'T = 2π·√(m/k) — trong công thức không có A. Đây là tính chất “đẳng thời” của dao động điều hòa, cơ sở của đồng hồ con lắc/lò xo.',tip:'Thấy câu hỏi “tăng biên độ, chu kì thế nào?” → trả lời ngay: không đổi. Bẫy rất hay gặp.'},
- {h:'4 · Tăng độ cứng k: dao động nhanh lên',say:'Lò xo cứng hơn kéo vật về VTCB mạnh hơn → gia tốc lớn hơn → vật hoàn thành một vòng nhanh hơn.',do:'Giữ m = 0,5 kg. Tăng k từ 50 lên 200 N/m (gấp 4) và so sánh T trước/sau trên bảng số liệu.',see:'T giảm còn đúng một nửa (ω tăng gấp đôi). Vật qua lại nhanh và “giật” hơn hẳn.',con:'ω = √(k/m) nên k tăng 4 lần → ω tăng 2 lần → T giảm 2 lần. Quan hệ căn bậc hai, không phải tỉ lệ thuận/nghịch đơn giản.',tip:'Dạng toán tỉ lệ: chỉ cần lập tỉ số T₂/T₁ = √(k₁/k₂) — không cần tính số tuyệt đối.'},
- {h:'5 · Tăng khối lượng m: dao động chậm lại',say:'Vật nặng hơn thì quán tính lớn hơn, lò xo kéo về chậm hơn — giống đẩy một chiếc xe nặng.',do:'Giữ k = 50 N/m. Tăng m từ 0,5 kg lên 2,0 kg (gấp 4) và đọc T.',see:'T tăng đúng gấp đôi. Đồ thị x(t) “kéo giãn” theo chiều ngang.',con:'m tăng 4 lần → T tăng 2 lần (vì T ∝ √m). Ghép với bước 4: T chỉ do (m, k) quyết định — gọi là tần số riêng của hệ.',tip:'Bài toán “thêm bớt khối lượng khi lò xo đang dao động” rất hay ra: nhớ T phụ thuộc √m, và tại thời điểm gắn thêm vật phải xét bảo toàn động lượng/năng lượng riêng.'},
- {h:'6 · Vận tốc và gia tốc: ai cực đại ở đâu?',say:'v = −Aω·sin(ωt + φ) và a = −ω²x. Gia tốc luôn ngược dấu với li độ — luôn hướng về VTCB.',do:'Cho chạy và nhìn ba số x, v, a cùng lúc. Chú ý khoảnh khắc vật ở biên và khoảnh khắc vật qua O.',see:'Ở biên: v = 0, |a| lớn nhất. Qua VTCB: x = 0 nên a = 0, |v| lớn nhất (v_max = Aω).',con:'Ba đại lượng lệch pha nhau: v sớm pha hơn x một góc π/2; a ngược pha với x. Học thuộc bảng “ở biên / ở VTCB” xử lý được phần lớn câu lý thuyết.',tip:'Câu hỏi đồ thị: cho đồ thị x(t), đồ thị a(t) là hình sin lật ngược (nhân với −ω²) — nhận ra ngay không cần tính.'},
- {h:'7 · Đổi pha ban đầu: đồ thị dịch ngang',say:'φ không đổi bản chất dao động (A, T giữ nguyên), chỉ đổi “điểm xuất phát” trên vòng tròn pha.',do:'Đặt φ = 90°, bấm “Đặt lại t = 0”. So sánh đồ thị với khi φ = 0°.',see:'Đồ thị bắt đầu từ x = 0 và đi xuống (dạng −sin). Vật xuất phát ngay tại VTCB nhưng theo chiều âm.',con:'x = A·cos(ωt + π/2) = −A·sin(ωt). Đổi φ tương đương chọn lại gốc thời gian — T, A, năng lượng đều không đổi.',tip:'Khi đề cho đồ thị, đọc x tại t = 0 để suy ra φ: x(0) = A·cos φ, kết hợp chiều chuyển động để chọn đúng nghiệm.'},
- {h:'8 · Năng lượng: động năng ⇄ thế năng',say:'W = ½kA² không đổi theo thời gian (bỏ qua ma sát). Bên trong, Wđ và Wt liên tục đổi cho nhau hai lần trong mỗi chu kì.',do:'Nhìn hai thanh năng lượng ở bảng điều khiển khi vật chạy. Tìm khoảnh khắc hai thanh bằng nhau.',see:'Ở biên: Wt cực đại, Wđ = 0. Ở VTCB: ngược lại. Hai thanh bằng nhau khi |x| = A/√2.',con:'Tại vị trí |x| = A/√2: Wđ = Wt = W/2. Tổng quát: Wt = W·(x/A)², Wđ = W·(1 − (x/A)²).',tip:'Dạng toán “tại li độ nào Wđ = n·Wt?” → dùng (x/A)² = 1/(n+1). Đây là mẫu câu vận dụng xuất hiện liên tục trong đề thi.'}
+ {h:'1 · Nhận biết hệ dao động',say:'Hệ gồm vật nặng khối lượng m gắn vào lò xo độ cứng k, đặt nằm ngang, bỏ qua ma sát. Điểm O là vị trí cân bằng — vị trí lò xo không biến dạng.',do:'Để nguyên mặc định (m = 0,5 kg, k = 50 N/m, A = 10 cm), bấm “Chạy” và quan sát vật qua lại quanh O.',see:'Bạn sẽ thấy vật dao động đều đặn quanh O, li độ x đổi dấu liên tục, hai đầu mút là vị trí biên ±A.',con:'Mọi dao động điều hòa đều mô tả được bằng x = A·cos(ωt + φ): chỉ cần biết biên độ, tần số góc và pha ban đầu là biết trạng thái vật tại mọi thời điểm.',tip:'Đề thi hay hỏi “vị trí nào là VTCB” — đó là vị trí hợp lực bằng 0, cũng là vị trí tốc độ lớn nhất.',preset:{m:0.5,k:50,A:10,phi:0}},
+ {h:'2 · Thả vật từ biên: pha ban đầu φ = 0',say:'Tại t = 0 ta thả vật không vận tốc đầu từ biên dương x = +A. Muốn x(0) = +A thì cos(φ) = 1, tức φ = 0.',do:'Đặt φ = 0°, bấm “Đặt lại t = 0” rồi cho chạy. Nhìn đồ thị x(t): nó khởi đầu ở đỉnh +A.',see:'Đồ thị bắt đầu từ +A và đi xuống — đúng dạng cosin. Vận tốc tại thời điểm thả bằng 0.',con:'Pha ban đầu φ ghi lại “ảnh chụp” trạng thái tại t = 0. Cùng một hệ, thả từ đâu và theo chiều nào sẽ cho φ khác nhau.',tip:'Mẹo viết phương trình: thả không vận tốc đầu từ +A → φ = 0; từ −A → φ = π; qua VTCB theo chiều dương → φ = −π/2.',preset:{phi:0}},
+ {h:'3 · Chu kì không phụ thuộc biên độ',say:'Nghi vấn kinh điển: kéo xa hơn (A lớn hơn) thì vật đi quãng đường dài hơn — có lâu hơn không? Quãng đường dài hơn nhưng tốc độ cũng lớn hơn đúng tỉ lệ, hai hiệu ứng triệt tiêu nhau.',do:'Đọc số T trên bảng điều khiển với A = 6 cm, sau đó kéo A lên 14 cm và đọc lại T.',see:'T không đổi (chỉ xấp xỉ 0,628 s với m = 0,5 kg, k = 50 N/m) dù biên độ thay đổi; chỉ có tốc độ cực đại là tăng.',con:'T = 2π·√(m/k) — trong công thức không có A. Đây là tính chất “đẳng thời” của dao động điều hòa, cơ sở của đồng hồ con lắc/lò xo.',tip:'Thấy câu hỏi “tăng biên độ, chu kì thế nào?” → trả lời ngay: không đổi. Bẫy rất hay gặp.',preset:{A:6}},
+ {h:'4 · Tăng độ cứng k: dao động nhanh lên',say:'Lò xo cứng hơn kéo vật về VTCB mạnh hơn → gia tốc lớn hơn → vật hoàn thành một vòng nhanh hơn.',do:'Giữ m = 0,5 kg. Tăng k từ 50 lên 200 N/m (gấp 4) và so sánh T trước/sau trên bảng số liệu.',see:'T giảm còn đúng một nửa (ω tăng gấp đôi). Vật qua lại nhanh và “giật” hơn hẳn.',con:'ω = √(k/m) nên k tăng 4 lần → ω tăng 2 lần → T giảm 2 lần. Quan hệ căn bậc hai, không phải tỉ lệ thuận/nghịch đơn giản.',tip:'Dạng toán tỉ lệ: chỉ cần lập tỉ số T₂/T₁ = √(k₁/k₂) — không cần tính số tuyệt đối.',preset:{m:0.5,k:200}},
+ {h:'5 · Tăng khối lượng m: dao động chậm lại',say:'Vật nặng hơn thì quán tính lớn hơn, lò xo kéo về chậm hơn — giống đẩy một chiếc xe nặng.',do:'Giữ k = 50 N/m. Tăng m từ 0,5 kg lên 2,0 kg (gấp 4) và đọc T.',see:'T tăng đúng gấp đôi. Đồ thị x(t) “kéo giãn” theo chiều ngang.',con:'m tăng 4 lần → T tăng 2 lần (vì T ∝ √m). Ghép với bước 4: T chỉ do (m, k) quyết định — gọi là tần số riêng của hệ.',tip:'Bài toán “thêm bớt khối lượng khi lò xo đang dao động” rất hay ra: nhớ T phụ thuộc √m, và tại thời điểm gắn thêm vật phải xét bảo toàn động lượng/năng lượng riêng.',preset:{k:50,m:2}},
+ {h:'6 · Vận tốc và gia tốc: ai cực đại ở đâu?',say:'v = −Aω·sin(ωt + φ) và a = −ω²x. Gia tốc luôn ngược dấu với li độ — luôn hướng về VTCB.',do:'Cho chạy và nhìn ba số x, v, a cùng lúc. Chú ý khoảnh khắc vật ở biên và khoảnh khắc vật qua O.',see:'Ở biên: v = 0, |a| lớn nhất. Qua VTCB: x = 0 nên a = 0, |v| lớn nhất (v_max = Aω).',con:'Ba đại lượng lệch pha nhau: v sớm pha hơn x một góc π/2; a ngược pha với x. Học thuộc bảng “ở biên / ở VTCB” xử lý được phần lớn câu lý thuyết.',tip:'Câu hỏi đồ thị: cho đồ thị x(t), đồ thị a(t) là hình sin lật ngược (nhân với −ω²) — nhận ra ngay không cần tính.',preset:{m:0.5,k:50,A:10,phi:0}},
+ {h:'7 · Đổi pha ban đầu: đồ thị dịch ngang',say:'φ không đổi bản chất dao động (A, T giữ nguyên), chỉ đổi “điểm xuất phát” trên vòng tròn pha.',do:'Đặt φ = 90°, bấm “Đặt lại t = 0”. So sánh đồ thị với khi φ = 0°.',see:'Đồ thị bắt đầu từ x = 0 và đi xuống (dạng −sin). Vật xuất phát ngay tại VTCB nhưng theo chiều âm.',con:'x = A·cos(ωt + π/2) = −A·sin(ωt). Đổi φ tương đương chọn lại gốc thời gian — T, A, năng lượng đều không đổi.',tip:'Khi đề cho đồ thị, đọc x tại t = 0 để suy ra φ: x(0) = A·cos φ, kết hợp chiều chuyển động để chọn đúng nghiệm.',preset:{phi:90}},
+ {h:'8 · Năng lượng: động năng ⇄ thế năng',say:'W = ½kA² không đổi theo thời gian (bỏ qua ma sát). Bên trong, Wđ và Wt liên tục đổi cho nhau hai lần trong mỗi chu kì.',do:'Nhìn hai thanh năng lượng ở bảng điều khiển khi vật chạy. Tìm khoảnh khắc hai thanh bằng nhau.',see:'Ở biên: Wt cực đại, Wđ = 0. Ở VTCB: ngược lại. Hai thanh bằng nhau khi |x| = A/√2.',con:'Tại vị trí |x| = A/√2: Wđ = Wt = W/2. Tổng quát: Wt = W·(x/A)², Wđ = W·(1 − (x/A)²).',tip:'Dạng toán “tại li độ nào Wđ = n·Wt?” → dùng (x/A)² = 1/(n+1). Đây là mẫu câu vận dụng xuất hiện liên tục trong đề thi.',preset:{m:0.5,k:50,A:10,phi:0}}
 ];
-const box=$('steps');
-STEPS.forEach((s,i)=>{
-  const d=document.createElement('div'); d.className='step'+(doneSteps.has(i)?' done show':'');
-  d.innerHTML='<h4>'+s.h+'</h4>'+
-   '<p><b class="k">Nói gì:</b> '+s.say+'</p>'+
-   '<p><b class="k">Động thủ:</b> '+s.do+'</p>'+
-   '<p><b class="k">Sẽ thấy:</b> '+s.see+'</p>'+
-   '<p class="concl"><b>Kết luận:</b> '+s.con+'<br><span class="small"><b>Điểm thi:</b> '+s.tip+'</span></p>'+
-   '<div class="row"><button data-a="show">Hiện kết luận</button><button data-a="done">'+(doneSteps.has(i)?'✓ Đã làm':'Đánh dấu đã làm')+'</button></div>';
-  d.querySelector('[data-a=show]').onclick=()=>d.classList.toggle('show');
-  d.querySelector('[data-a=done]').onclick=e=>{
-    if(doneSteps.has(i)){doneSteps.delete(i);d.classList.remove('done');e.target.textContent='Đánh dấu đã làm';}
-    else{doneSteps.add(i);d.classList.add('done','show');e.target.textContent='✓ Đã làm';}
-    localStorage.setItem(KEY+':steps',JSON.stringify([...doneSteps])); updProg();
-  };
-  box.appendChild(d);
-});
+let curStep=Math.min(STEPS.length-1,Math.max(0,parseInt(localStorage.getItem(KEY+':cur')||'0',10)||0));
+let conclShown=new Set();
+function saveSteps(){localStorage.setItem(KEY+':steps',JSON.stringify([...doneSteps]));localStorage.setItem(KEY+':cur',String(curStep));}
+function setSlider(id,val){const el=$(id); if(!el||val===undefined) return; el.value=val; el.dispatchEvent(new Event('input',{bubbles:true}));}
+function applyPreset(i){
+  const p=STEPS[i].preset||{};
+  setSlider('s_m',p.m); setSlider('s_k',p.k); setSlider('s_A',p.A);
+  if(p.phi!==undefined) setSlider('s_phi',p.phi);
+  t=0; hist=[]; if(!running){running=true;$('btnPlay').textContent='❚❚ Tạm dừng';}
+}
+function goStep(i,scroll){
+  curStep=Math.min(STEPS.length-1,Math.max(0,i)); saveSteps(); renderSteps();
+  if(scroll) $('stepDeck').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function toggleDone(i){
+  if(doneSteps.has(i)) doneSteps.delete(i); else doneSteps.add(i);
+  saveSteps(); renderSteps();
+}
+function renderSteps(){
+  const s=STEPS[curStep];
+  $('stepNow').textContent='Bước '+(curStep+1)+' / '+STEPS.length+' · '+s.h.replace(/^\d+ · /,'');
+  $('deckTitle').textContent=s.h;
+  $('deckBody').innerHTML=
+    '<p><b class="k">Nói gì:</b> '+s.say+'</p>'+
+    '<p><b class="k">Động thủ:</b> '+s.do+'</p>'+
+    '<p><b class="k">Sẽ thấy:</b> '+s.see+'</p>'+
+    (conclShown.has(curStep)?'<p class="concl" style="display:block"><b>Kết luận:</b> '+s.con+'<br><span class="small"><b>Điểm thi:</b> '+s.tip+'</span></p>':'');
+  $('deckPreset').style.display=s.preset?'':'none';
+  $('deckDone').textContent=doneSteps.has(curStep)?'✓ Đã làm bước này':'✓ Đã làm — '+(curStep<STEPS.length-1?'sang bước tiếp':'xem kiểm tra cuối bài');
+  $('deckDots').innerHTML=STEPS.map((_,i)=>'<button data-dot="'+i+'" class="'+(i===curStep?'primary':'')+'" style="padding:5px 10px;border-radius:999px;'+(doneSteps.has(i)?'border-color:#0d9d58;color:#0d9d58;':'')+'">'+(i+1)+(doneSteps.has(i)?' ✓':'')+'</button>').join(' ');
+  document.querySelectorAll('[data-dot]').forEach(b=>b.onclick=()=>goStep(parseInt(b.dataset.dot,10),false));
+  // overview cards
+  const box=$('steps'); box.innerHTML='';
+  STEPS.forEach((st,i)=>{
+    const d=document.createElement('div'); d.className='step'+(doneSteps.has(i)?' done':'')+(conclShown.has(i)?' show':'')+(i===curStep?' cur':'');
+    d.innerHTML='<h4>'+st.h+(i===curStep?' · <span style="color:var(--acc)">đang học</span>':'')+'</h4>'+
+     '<p><b class="k">Nói gì:</b> '+st.say+'</p>'+
+     '<p><b class="k">Động thủ:</b> '+st.do+'</p>'+
+     '<p><b class="k">Sẽ thấy:</b> '+st.see+'</p>'+
+     '<p class="concl"><b>Kết luận:</b> '+st.con+'<br><span class="small"><b>Điểm thi:</b> '+st.tip+'</span></p>'+
+     '<div class="row"><button data-a="go">▶ Học bước này</button><button data-a="show">Hiện kết luận</button><button data-a="done">'+(doneSteps.has(i)?'✓ Đã làm':'Đánh dấu đã làm')+'</button></div>';
+    d.querySelector('[data-a=go]').onclick=()=>goStep(i,true);
+    d.querySelector('[data-a=show]').onclick=()=>{conclShown.has(i)?conclShown.delete(i):conclShown.add(i); renderSteps();};
+    d.querySelector('[data-a=done]').onclick=()=>toggleDone(i);
+    box.appendChild(d);
+  });
+  updProg();
+}
 function updProg(){
   const n=doneSteps.size;
   $('progBar').style.width=(100*n/STEPS.length)+'%';
   $('progTxt').textContent='Đã hoàn thành '+n+' / '+STEPS.length+' bước';
 }
-updProg();
+$('btnPrevStep').onclick=()=>goStep(curStep-1,true);
+$('btnNextStep').onclick=()=>goStep(curStep+1,true);
+$('deckShow').onclick=()=>{conclShown.has(curStep)?conclShown.delete(curStep):conclShown.add(curStep); renderSteps();};
+$('deckPreset').onclick=()=>applyPreset(curStep);
+$('deckDone').onclick=()=>{
+  doneSteps.add(curStep); saveSteps();
+  if(curStep<STEPS.length-1){goStep(curStep+1,false);}
+  else{renderSteps(); document.querySelector('section.card h2:nth-of-type(1)'); $('quiz').scrollIntoView({behavior:'smooth',block:'start'});}
+};
+renderSteps();
+
 
 /* ---------- quiz ---------- */
 const QUIZ=[
